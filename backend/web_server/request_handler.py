@@ -1,23 +1,24 @@
 import typing
-from aiohttp import web
 
 
 class RequestHandler:
     def __init__(self):
         pass
 
-    def handle_nick(self, args: typing.Dict):
-        return web.Response(f'handle_nick: {args}')
+    def handle_home(self, args: typing.Dict):
+        return f'/help:{args}'
 
-    def handle_forget(self, args: typing.Dict):
-        return web.Response(f'handle_forget: {args}')
+    def post_nick(self, args: typing.Dict):
+        return f'/nick:{args}'
 
-    def handle_game(self, args: typing.Dict):
-        return web.Response(f'handle_game: {args}')
+    def post_forget(self, args: typing.Dict):
+        return f'/forget:{args}'
+
+    def post_game(self, args: typing.Dict):
+        return f'/game:{args}'
 
     def handle_list(self, args: typing.Dict):
-        return web.Response(f'handle_list: {args}')
+        return f'/list:{args}'
 
     def handle_help(self, args: typing.Dict):
-        return web.Response(f'handle_help: {args}')
-
+        return f'/help:{args}'
