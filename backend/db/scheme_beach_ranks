@@ -1,0 +1,177 @@
+--DROP TABLE beach_ranks.players;
+--DROP TABLE beach_ranks.ratings;
+--DROP TABLE beach_ranks.ratings_defs;
+--DROP TABLE beach_ranks.games;
+--DROP TABLE beach_ranks.game_players;
+
+CREATE TABLE beach_ranks.players
+(
+  player_id integer,
+  status varchar(10),
+  nick varchar(50),
+  phone varchar(20)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE beach_ranks.players
+  OWNER TO beach_ranks;
+
+--DROP TABLE beach_ranks.ratings_defs;
+
+CREATE TABLE beach_ranks.ratings_defs
+(
+  rating_id integer,
+  code varchar(20),
+  descr varchar(100)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE beach_ranks.ratings_defs
+  OWNER TO beach_ranks;
+
+--DROP TABLE beach_ranks.ratings;
+
+CREATE TABLE beach_ranks.ratings
+(
+  rating_id integer,
+  player_id integer,
+  value double precision,
+  accuracy double precision
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE beach_ranks.ratings
+  OWNER TO beach_ranks;
+
+--DROP TABLE beach_ranks.games;
+
+CREATE TABLE beach_ranks.games
+(
+  game_id integer,
+  status varchar(10),
+  date date,
+  score_won integer,
+  score_lost integer
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE beach_ranks.games
+  OWNER TO beach_ranks;
+
+--DROP TABLE beach_ranks.game_players;
+
+CREATE TABLE beach_ranks.game_players
+(
+  game_id integer,
+  player_id integer,
+  win boolean,
+  valid boolean
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE beach_ranks.game_players
+  OWNER TO beach_ranks;
+
+CREATE OR REPLACE FUNCTION beach_ranks.test()
+RETURNS integer AS $$
+DECLARE
+    i integer;
+BEGIN
+  select 1 into i;
+  return i;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION beach_ranks.save_player(p_player_id integer, p_status varchar, p_nick varchar, p_phone varchar)
+RETURNS integer AS $$
+DECLARE
+    i integer;
+BEGIN
+    select count(*) into i from beach_ranks.players where player_id = p_player_id;
+    if i > 0 then
+    -- update
+	update beach_ranks.players
+	 set nick = p_nick, phone = p_phone, status = p_status
+	  where player_id = p_player_id;
+    else
+    -- new
+        -- check nick
+	select count(*) into i from beach_ranks.players where nick = p_nick;
+	if i > 0 then 
+	  RAISE EXCEPTION 'beach_ranks.save_player invalid params: nick already in use';
+	  return -1;
+	end if;
+
+	-- create
+	select max(player_id) into i from beach_ranks.players;
+	if i is Null then
+	  i := 0;
+	end if;
+	insert into beach_ranks.players(player_id, status, nick, phone) values (i + 1, p_status, p_nick, p_phone);
+	
+	return i + 1;
+    end if;
+    
+    return p_player_id;
+exception
+    when others then
+        RAISE EXCEPTION 'beach_ranks.save_player %: %', SQLERRM, SQLSTATE;
+        return -1;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION beach_ranks.save_rating(p_rating_code varchar, p_player_id integer, 
+						   p_value double precision, p_accuracy double precision)
+RETURNS integer AS $$
+DECLARE
+    i integer;
+    v_rating_id integer;
+BEGIN
+    -- find ratings_def
+    select max(coalesce(rat_id, -1)) into v_rating_id from (
+      select rating_id as rat_id from beach_ranks.ratings_defs where code = p_rating_code
+      union
+      select -1 as rat_id
+    ) a;
+
+    if v_rating_id < 0 then
+    -- insert new type of rating
+      select max(coalesce(rat_id, 0))+1 into v_rating_id from (
+	      select rating_id as rat_id from beach_ranks.ratings_defs
+	      union
+	      select 0 as rat_id
+	    ) a;
+      insert into beach_ranks.ratings_defs(rating_id, code, descr) values (v_rating_id, p_rating_code, '');
+    end if;
+
+    select count(*) into i from beach_ranks.ratings r
+     where r.rating_id = v_rating_id and r.player_id = p_player_id;
+    
+    if i = 0 then
+      -- check player exists
+      select count(*) into i from beach_ranks.players
+       where player_id = p_player_id;
+      if i = 0 then
+        RAISE EXCEPTION 'beach_ranks.save_rating invalid params: player not found';
+        return -1;
+      end if;
+      
+      insert into beach_ranks.ratings(rating_id, player_id, value, accuracy) values (v_rating_id, p_player_id, p_value, p_accuracy);
+    else
+      update beach_ranks.ratings
+       set value = p_value, accuracy = p_accuracy
+        where rating_id = v_rating_id and player_id = p_player_id;
+    end if;
+    
+    return 1;
+exception
+    when others then
+        RAISE EXCEPTION 'beach_ranks.save_rating %: %', SQLERRM, SQLSTATE;
+        return -1;
+END;
+$$ LANGUAGE plpgsql;
