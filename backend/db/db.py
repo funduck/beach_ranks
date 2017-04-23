@@ -10,12 +10,17 @@ class DB(object):
     def __init__(self):
         self.dsn = 'dbname=beach_ranks user=beach_ranks password=beachranks host=127.0.0.1 port=5432'
         self.do_fetch_regexp = re.compile("^(SELECT|select)")
+        self.connected = False
 
     async def connect(self):
         self.conn_pool = await aiopg.create_pool(self.dsn)
+        self.connected = True
 
     # script is list: [sql, list_of_params]
     async def execute(self, script, show_statement=True):
+        # TODO fix connect lose
+        # if self.connected == False:
+        await self.connect()
         async with self.conn_pool.acquire() as conn:
             async with conn.cursor() as cur:
                 try:
@@ -34,3 +39,5 @@ class DB(object):
                 except psycopg2.ProgrammingError as e:
                     print("error on script", script, "\n", e)
                     raise DBException(str(e))
+
+db = DB()
