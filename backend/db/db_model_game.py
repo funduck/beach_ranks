@@ -31,7 +31,7 @@ class Game(object):
 
 		return [sqls, params]
 
-	def sql_delete_game(self):
+	def sql_delete_completely_game(self):
 		return ['delete from beach_ranks.games where game_id = %s;'\
 			'delete from beach_ranks.game_players where game_id = %s', [self.id, self.id]
 			]
@@ -49,8 +49,8 @@ class Game(object):
 		self.id = res[0][0]
 		await db.execute(self.sql_save_teams())
 
-	async def delete(self):
-		await db.execute(self.sql_delete_game())
+	async def delete_completely(self):
+		await db.execute(self.sql_delete_completely_game())
 
 	async def load(self):
 		res = await db.execute(self.sql_load_game())

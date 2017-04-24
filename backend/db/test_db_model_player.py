@@ -7,7 +7,7 @@ async def test_save_player_and_delete():
     p = Player(nick='NewPlayer', phone='79161234567')
     p.set_true_skill(1200, 1)
     await p.save()
-    await p.delete()
+    await p.delete_completely()
 
 @pytest.mark.asyncio
 async def test_save_player_load_by_id():
@@ -17,7 +17,7 @@ async def test_save_player_load_by_id():
     l = Player(id=p.id)
     await l.load()
     assert l.nick == p.nick
-    await p.delete()
+    await p.delete_completely()
 
 @pytest.mark.asyncio
 async def test_save_player_load_by_phone():
@@ -27,4 +27,4 @@ async def test_save_player_load_by_phone():
     l = Player(phone=p.phone)
     await l.load()
     assert l.nick == p.nick
-    await p.delete()
+    await p.delete_completely()

@@ -177,16 +177,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION beach_ranks.delete_player(p_player_id integer)
-RETURNS integer AS $$
-DECLARE
-BEGIN
-  delete from beach_ranks.players
-   where player_id = p_player_id;
-  return p_player_id;
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION beach_ranks.save_rating(p_rating_code varchar, p_player_id integer, 
                p_value double precision, p_accuracy double precision)
 RETURNS integer AS $$

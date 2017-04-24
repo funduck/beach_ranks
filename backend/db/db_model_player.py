@@ -28,7 +28,12 @@ class Player(object):
         return [sql, params]
 
     def sql_delete_player(self):
-        return ['select * from beach_ranks.delete_player(%s);', [self.id]]
+        return ['update beach_ranks.players set status = \'deleted\' and player_id = %s', [self.id]]
+
+    def sql_delete_completely_player(self):
+        return ['delete from beach_ranks.players where player_id = %s;'\
+            'delete from beach_ranks.ratings where player_id = %s;', [self.id, self.id]
+            ]
 
     def sql_save_rating(self):
         # table Ratings is (rating_id varchar, player_id number, value number, accuracy number)
@@ -55,6 +60,9 @@ class Player(object):
         res = await db.execute(self.sql_save_player())
         self.id = res[0][0]
         res = await db.execute(self.sql_save_rating())
+
+    async def delete_completely(self):
+        res = await db.execute(self.sql_delete_completely_player())
 
     async def delete(self):
         res = await db.execute(self.sql_delete_player())

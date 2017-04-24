@@ -13,8 +13,8 @@ async def test_save_game_and_delete():
     g = Game(date=datetime.now(), team_won=[p.id, p.id], team_lost=[p.id, p.id], score_won=15, score_lost=10)
     await g.save()
 
-    await g.delete()
-    await p.delete()
+    await g.delete_completely()
+    await p.delete_completely()
 
 @pytest.mark.asyncio
 async def test_save_game_and_change():
@@ -27,8 +27,8 @@ async def test_save_game_and_change():
     g.score_won = 20
     await g.save()
 
-    await g.delete()
-    await p.delete()    
+    await g.delete_completely()
+    await p.delete_completely()
 
 @pytest.mark.asyncio
 async def test_save_game_and_load():
@@ -45,9 +45,9 @@ async def test_save_game_and_load():
     assert g2.score_lost == g.score_lost
     assert g2.score_won == g.score_won
 
-    await g.delete()
-    await g2.delete()
-    await p.delete()
+    await g.delete_completely()
+    await g2.delete_completely()
+    await p.delete_completely()
 
 @pytest.mark.asyncio
 async def test_save_game_change_load():
@@ -66,6 +66,6 @@ async def test_save_game_change_load():
     assert g2.score_lost == g.score_lost
     assert g2.score_won == 25
 
-    await g.delete()
-    await g2.delete()
-    await p.delete()
+    await g.delete_completely()
+    await g2.delete_completely()
+    await p.delete_completely()
