@@ -18,22 +18,28 @@ class Game(object):
 			]
 
 	def sql_save_teams(self):
-		# table Game_players is (game_id integer, player_id integer, win boolean, valid boolean)
+		# table Game_players is (game_id integer, player_id integer, win boolean)
 		sqls = ''
 		params = []
 		for p in self.team_won:
-			sqls += 'select * from beach_ranks.save_game_player(%s, %s, %s, %s);'
-			params.extend([self.id, p, True, True])
+			sqls += 'select * from beach_ranks.save_game_player(%s, %s, %s);'
+			params.extend([self.id, p, True])
 
 		for p in self.team_lost:
-			sqls += 'select * from beach_ranks.save_game_player(%s, %s, %s, %s);'
-			params.extend([self.id, p, False, True])
+			sqls += 'select * from beach_ranks.save_game_player(%s, %s, %s);'
+			params.extend([self.id, p, False])
 
 		return [sqls, params]
 
+	def sql_save_rating(self, player_id, rating_code, value_before, value_after, accuracy_before, accuracy_after):
+		return ['select * from beach_ranks.save_game_rating(%s, %s, %s, %s, %s, %s, %s);',
+			[self.id, player_id, rating_code, value_before, value_after, accuracy_before, accuracy_after]
+			]
+
 	def sql_delete_completely_game(self):
 		return ['delete from beach_ranks.games where game_id = %s;'\
-			'delete from beach_ranks.game_players where game_id = %s', [self.id, self.id]
+			'delete from beach_ranks.game_players where game_id = %s;'\
+			'delete from beach_ranks.game_ratings where game_id = %s;', [self.id, self.id, self.id]
 			]
 
 	def sql_load_game(self):
@@ -42,12 +48,16 @@ class Game(object):
 			]
 
 	def sql_load_game_players(self):
-		return ['select player_id, win from beach_ranks.game_players where game_id = %s and valid = True', [self.id]]
+		return ['select player_id, win from beach_ranks.game_players where game_id = %s', [self.id]]
 
 	async def save(self):
 		res = await db.execute(self.sql_save_game())
 		self.id = res[0][0]
 		await db.execute(self.sql_save_teams())
+
+	async def save_rating(self, player_id, rating_code, rating_before, rating_after):
+		await db.execute(self.sql_save_rating(player_id, rating_code, 
+			rating_before[0], rating_after[0], rating_before[1], rating_after[1]))
 
 	async def delete_completely(self):
 		await db.execute(self.sql_delete_completely_game())

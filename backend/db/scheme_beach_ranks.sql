@@ -1,4 +1,4 @@
--- DROP ROLE beach_ranks;
+﻿-- DROP ROLE beach_ranks;
 
 /*
   CREATE ROLE beach_ranks LOGIN
@@ -28,6 +28,7 @@ DROP TABLE beach_ranks.ratings;
 DROP TABLE beach_ranks.ratings_defs;
 DROP TABLE beach_ranks.games;
 DROP TABLE beach_ranks.game_players;
+DROP TABLE beach_ranks.game_ratings;
 */
 
 -- DROP SEQUENCE beach_ranks.sq_player_id
@@ -73,7 +74,6 @@ ALTER TABLE beach_ranks.players
 
 CREATE TABLE beach_ranks.ratings_defs
 (
-  rating_id integer,
   rating_code varchar(20),
   descr varchar(100)
 )
@@ -89,6 +89,7 @@ CREATE TABLE beach_ranks.ratings
 (
   rating_id integer,
   player_id integer,
+  rating_code varchar(20),
   value double precision,
   accuracy double precision
 )
@@ -120,14 +121,31 @@ CREATE TABLE beach_ranks.game_players
 (
   game_id integer,
   player_id integer,
-  win boolean,
-  valid boolean
+  win boolean
 )
 WITH (
   OIDS=FALSE
 );
 ALTER TABLE beach_ranks.game_players
   OWNER TO beach_ranks;
+
+--DROP TABLE beach_ranks.game_ratings;
+
+CREATE TABLE beach_ranks.game_ratings
+(
+  game_id integer,
+  rating_id integer,
+  value_before double precision,
+  value_after double precision,
+  accuracy_before double precision,
+  accuracy_after double precision
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE beach_ranks.game_ratings
+  OWNER TO beach_ranks;
+
 
 CREATE OR REPLACE FUNCTION beach_ranks.test()
 RETURNS integer AS $$
@@ -177,7 +195,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION beach_ranks.save_rating(p_rating_code varchar, p_player_id integer, 
+CREATE OR REPLACE FUNCTION beach_ranks.save_rating(p_player_id integer, p_rating_code varchar,
                p_value double precision, p_accuracy double precision)
 RETURNS integer AS $$
 DECLARE
@@ -185,21 +203,18 @@ DECLARE
   v_rating_id integer;
 BEGIN
   -- find ratings_def
-  begin
-    select rating_id into v_rating_id from beach_ranks.ratings_defs 
+  select count(*) into i from beach_ranks.ratings_defs 
       where rating_code = p_rating_code;
-  exception
-    when others then
-      -- create new type of rating
-      insert into beach_ranks.ratings_defs(rating_id, rating_code, descr) 
-        values (nextval('beach_ranks.sq_rating_id'), p_rating_code, '')
-        returning rating_id into v_rating_id;
-  end;
-  
-  select count(*) into i from beach_ranks.ratings r
-   where r.rating_id = v_rating_id and r.player_id = p_player_id;
-  
   if i = 0 then
+    -- create new type of rating
+    insert into beach_ranks.ratings_defs(rating_code, descr) 
+      values (p_rating_code, '');
+  end if;
+  
+  select rating_id into v_rating_id from beach_ranks.ratings r
+   where r.rating_code = p_rating_code and r.player_id = p_player_id;
+  
+  if v_rating_id is Null then
     -- check player exists
     select count(*) into i from beach_ranks.players
      where player_id = p_player_id;
@@ -209,8 +224,8 @@ BEGIN
     end if;
     
     -- create rating
-    insert into beach_ranks.ratings(rating_id, player_id, value, accuracy) 
-      values (v_rating_id, p_player_id, p_value, p_accuracy);
+    insert into beach_ranks.ratings(rating_id, player_id, rating_code, value, accuracy) 
+      values (nextval('beach_ranks.sq_rating_id'), p_player_id, p_rating_code, p_value, p_accuracy);
   else
     update beach_ranks.ratings
      set value = p_value, accuracy = p_accuracy
@@ -254,27 +269,61 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION beach_ranks.save_game_player(p_game_id integer, p_player_id integer, p_win boolean, p_valid boolean)
+CREATE OR REPLACE FUNCTION beach_ranks.save_game_player(p_game_id integer, p_player_id integer, p_win boolean)
 RETURNS integer AS $$
 DECLARE
   i integer;
 BEGIN
   -- check game player exists
   select count(*) into i from beach_ranks.game_players 
-    where game_id = p_game_id and player_id = p_player_id and valid = True;
+    where game_id = p_game_id and player_id = p_player_id;
   if i > 0 then
     update beach_ranks.game_players
-      set win = p_win, valid = p_valid
-      where game_id = p_game_id and player_id = p_player_id and valid = True;
+      set win = p_win
+      where game_id = p_game_id and player_id = p_player_id;
   else
-    insert into beach_ranks.game_players(game_id, player_id, win, valid) 
-      values (p_game_id, p_player_id, p_win, p_valid);
+    insert into beach_ranks.game_players(game_id, player_id, win) 
+      values (p_game_id, p_player_id, p_win);
   end if;
 
   return 1;
 /*exception
   when others then
     RAISE EXCEPTION 'beach_ranks.save_game_player %: %', SQLERRM, SQLSTATE;
+    return -1;*/
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION beach_ranks.save_game_rating(p_game_id integer, p_player_id integer,
+  p_rating_code varchar, p_value_before double precision, p_value_after double precision,
+  p_accuracy_before double precision, p_accuracy_after double precision)
+RETURNS integer AS $$
+DECLARE
+  i integer;
+  v_rating_id integer;
+BEGIN
+  select rating_id into v_rating_id from beach_ranks.ratings
+    where rating_code = p_rating_code and player_id = p_player_id;
+
+  -- check game rating exists
+  select count(*) into i from beach_ranks.game_ratings
+    where game_id = p_game_id and rating_id = v_rating_id;
+  if i > 0 then
+    update beach_ranks.game_ratings
+      set value_before = p_value_before, value_after = p_value_after,
+          accuracy_before = p_accuracy_before, accuracy_after = p_accuracy_after
+      where game_id = p_game_id and rating_id = v_rating_id;
+  else
+    insert into beach_ranks.game_ratings(game_id, rating_id, value_before, value_after,
+        accuracy_before, accuracy_after)
+      values (p_game_id, v_rating_id, p_value_before, p_value_after,
+        p_accuracy_before, p_accuracy_after);
+  end if;
+
+  return 1;
+/*exception
+  when others then
+    RAISE EXCEPTION 'beach_ranks.save_game_rating %: %', SQLERRM, SQLSTATE;
     return -1;*/
 END;
 $$ LANGUAGE plpgsql;

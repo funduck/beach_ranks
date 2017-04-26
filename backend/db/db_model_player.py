@@ -9,16 +9,13 @@ class Player(object):
         self.rating = {}
         self.status = 'ok'
 
-    def get_true_skill(self):
-        if self.rating['trueskill'] is None:
+    def get_rating(self, rating_code):
+        if self.rating[rating_code] is None:
             return None
-        return {
-            'mu': self.rating['trueskill']['value'],
-            'sigma': self.rating['trueskill']['accuracy']
-        }
+        return [self.rating[rating_code]["value"], self.rating[rating_code]["accuracy"]]
 
-    def set_true_skill(self, mu, sigma):
-        self.rating['trueskill'] = {'value': mu, 'accuracy': sigma}
+    def set_rating(self, rating_code, rating):
+        self.rating[rating_code] = {'value': rating[0], 'accuracy': rating[1]}
 
     def sql_save_player(self):
         # table Players is (player_id number, status varchar, nick varchar, phone varchar)
@@ -36,22 +33,22 @@ class Player(object):
             ]
 
     def sql_save_rating(self):
-        # table Ratings is (rating_id varchar, player_id number, value number, accuracy number)
+        # table Ratings is (rating_id varchar, player_id number, rating_code varchar, value number, accuracy number)
         sql = ''
         params = []
         for r_code in self.rating:
             rating = self.rating[r_code]
             sql += 'select * from beach_ranks.save_rating(%s, %s, %s, %s);'
-            params.extend([r_code, self.id, rating['value'], rating['accuracy']])
+            params.extend([self.id, r_code, rating['value'], rating['accuracy']])
     
         return [sql, params]
 
     def sql_ratings(self):
-        return ['select rating_code, value, accuracy, descr from beach_ranks.ratings r, beach_ranks.ratings_defs d '\
-        'where player_id = %s and r.rating_id = d.rating_id', [self.id]]
+        return ['select r.rating_code, value, accuracy, descr from beach_ranks.ratings r, beach_ranks.ratings_defs d '\
+        'where player_id = %s and r.rating_code = d.rating_code', [self.id]]
 
     def sql_load_player(self):
-        if self.id > 0:
+        if self.id is not None and self.id > 0:
             return ['select player_id, status, nick, phone from beach_ranks.players where player_id = %s', [self.id]]
         if self.phone is not None:
             return ['select player_id, status, nick, phone from beach_ranks.players where phone = %s', [self.phone]]
@@ -62,15 +59,16 @@ class Player(object):
         res = await db.execute(self.sql_save_rating())
 
     async def delete_completely(self):
-        res = await db.execute(self.sql_delete_completely_player())
+        await db.execute(self.sql_delete_completely_player())
 
     async def delete(self):
-        res = await db.execute(self.sql_delete_player())
+        await db.execute(self.sql_delete_player())
 
     async def load(self):
         res = await db.execute(self.sql_load_player())
         # TODO check, it returns one record
         res = res[0]
+        self.id = res[0]
         self.status = res[1]
         self.nick = res[2]
         self.phone = res[3]
