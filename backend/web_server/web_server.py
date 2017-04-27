@@ -44,7 +44,7 @@ class WebServer:
             elif attr.startswith(self._post_prefix):
                 method_name = attr[len(self._post_prefix):]
                 method = getattr(self._handler, attr)
-                self._app.router.add_get(f'/{method_name}',
+                self._app.router.add_post(f'/{method_name}',
                                          functools.partial(self._handle_wrapper, method))
                 logging.info(f'Registered web resource for POST: /{method_name}')
 
