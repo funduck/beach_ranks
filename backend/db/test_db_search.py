@@ -1,9 +1,11 @@
-from db_model_player import Player
-from db_model_game import Game
-from db_search import Search
-import pytest
-import pytest_asyncio
 from datetime import datetime
+
+import pytest
+
+from .db_model_game import Game
+from .db_model_player import Player
+from .db_search import Search
+
 
 @pytest.mark.asyncio
 async def test_all():

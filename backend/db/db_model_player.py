@@ -1,5 +1,5 @@
-from db import db
-import asyncio
+from .db import db
+
 
 class Player(object):
     def __init__(self, id=0, nick=None, phone=None):
@@ -40,8 +40,8 @@ class Player(object):
         return [sql, params]
 
     def sql_ratings(self):
-        return ['select r.rating_code, value, accuracy, descr from beach_ranks.ratings r, beach_ranks.ratings_defs d '\
-        'where player_id = %s and r.rating_code = d.rating_code', [self.id]]
+        return ['select r.rating_code, value, accuracy, descr from beach_ranks.ratings r, beach_ranks.ratings_defs d '
+                'where player_id = %s and r.rating_code = d.rating_code', [self.id]]
 
     def sql_load_player(self):
         if self.id is not None and self.id > 0:
@@ -52,7 +52,7 @@ class Player(object):
     async def save(self, who='test'):
         res = await db.execute(self.sql_save_player(who))
         self.id = res[0][0]
-        res = await db.execute(self.sql_save_rating(who))
+        await db.execute(self.sql_save_rating(who))
 
     async def delete_completely(self):
         await db.execute(self.sql_delete_completely_player())
