@@ -55,12 +55,20 @@ CREATE SEQUENCE beach_ranks.sq_game_id
 ALTER SEQUENCE beach_ranks.sq_game_id
   OWNER TO beach_ranks;
 
+-- DROP SEQUENCE beach_ranks.sq_log_id
 
+CREATE SEQUENCE beach_ranks.sq_log_id
+   INCREMENT 1
+   START 1;
+ALTER SEQUENCE beach_ranks.sq_log_id
+  OWNER TO beach_ranks;
+
+
+-- DROP TABLE beach_ranks.players;
 
 CREATE TABLE beach_ranks.players
 (
   player_id integer,
-  status varchar(10),
   nick varchar(50),
   phone varchar(20)
 )
@@ -99,12 +107,11 @@ WITH (
 ALTER TABLE beach_ranks.ratings
   OWNER TO beach_ranks;
 
---DROP TABLE beach_ranks.games;
+-- DROP TABLE beach_ranks.games;
 
 CREATE TABLE beach_ranks.games
 (
   game_id integer,
-  status varchar(10),
   date date,
   score_won integer,
   score_lost integer
@@ -146,6 +153,22 @@ WITH (
 ALTER TABLE beach_ranks.game_ratings
   OWNER TO beach_ranks;
 
+--DROP TABLE beach_ranks.log;
+
+CREATE TABLE beach_ranks.log
+(
+  log_id integer,
+  object_type varchar(20),
+  object_id varchar(30),
+  what varchar(100),
+  who varchar(20),
+  date date
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE beach_ranks.log
+  OWNER TO beach_ranks;
 
 CREATE OR REPLACE FUNCTION beach_ranks.test()
 RETURNS integer AS $$
@@ -157,7 +180,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION beach_ranks.save_player(p_player_id integer, p_status varchar, p_nick varchar, p_phone varchar)
+CREATE OR REPLACE FUNCTION beach_ranks.save_player(p_player_id integer, p_nick varchar, p_phone varchar, who varchar)
 RETURNS integer AS $$
 DECLARE
     i integer;
@@ -167,8 +190,10 @@ BEGIN
   if i > 0 then
     -- update
     update beach_ranks.players
-     set nick = p_nick, phone = p_phone, status = p_status
+     set nick = p_nick, phone = p_phone
       where player_id = p_player_id;
+    insert into beach_ranks.log(log_id, object_type, object_id, what, who, date) 
+      values (nextval('beach_ranks.sq_log_id'), 'players', p_player_id, 'update '||p_nick||' '||p_phone, who, now());
   else
     -- new
     -- check nick
@@ -181,9 +206,10 @@ BEGIN
     -- create
     select nextval('beach_ranks.sq_player_id') into i;
 
-    insert into beach_ranks.players(player_id, status, nick, phone) 
-      values (i, p_status, p_nick, p_phone);
-    
+    insert into beach_ranks.players(player_id, nick, phone) 
+      values (i, p_nick, p_phone);
+    insert into beach_ranks.log(log_id, object_type, object_id, what, who, date) 
+      values (nextval('beach_ranks.sq_log_id'), 'players', i, 'insert '||p_nick||' '||p_phone, who, now());
     return i;
   end if;
     
@@ -196,7 +222,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION beach_ranks.save_rating(p_player_id integer, p_rating_code varchar,
-               p_value double precision, p_accuracy double precision)
+               p_value double precision, p_accuracy double precision, who varchar)
 RETURNS integer AS $$
 DECLARE
   i integer;
@@ -204,7 +230,7 @@ DECLARE
 BEGIN
   -- find ratings_def
   select count(*) into i from beach_ranks.ratings_defs 
-      where rating_code = p_rating_code;
+    where rating_code = p_rating_code;
   if i = 0 then
     -- create new type of rating
     insert into beach_ranks.ratings_defs(rating_code, descr) 
@@ -225,11 +251,18 @@ BEGIN
     
     -- create rating
     insert into beach_ranks.ratings(rating_id, player_id, rating_code, value, accuracy) 
-      values (nextval('beach_ranks.sq_rating_id'), p_player_id, p_rating_code, p_value, p_accuracy);
+      values (nextval('beach_ranks.sq_rating_id'), p_player_id, p_rating_code, p_value, p_accuracy)
+      returning rating_id into v_rating_id;
+    insert into beach_ranks.log(log_id, object_type, object_id, what, who, date)
+      values (nextval('beach_ranks.sq_log_id'), 'ratings', v_rating_id, 
+        'insert '||p_player_id||' '||p_rating_code||' '||p_value||' '||p_accuracy, who, now());
   else
     update beach_ranks.ratings
      set value = p_value, accuracy = p_accuracy
       where rating_id = v_rating_id and player_id = p_player_id;
+    insert into beach_ranks.log(log_id, object_type, object_id, what, who, date) 
+      values (nextval('beach_ranks.sq_log_id'), 'ratings', v_rating_id, 
+        'update '||p_player_id||' '||p_rating_code||' '||p_value||' '||p_accuracy, who, now());
   end if;
   
   return 1;
@@ -240,8 +273,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION beach_ranks.save_game(p_game_id integer, p_status varchar, 
-               p_date varchar, p_score_won integer, p_score_lost integer)
+CREATE OR REPLACE FUNCTION beach_ranks.save_game(p_game_id integer, p_date varchar, 
+  p_score_won integer, p_score_lost integer, who varchar)
 RETURNS integer AS $$
 DECLARE
   i integer;
@@ -254,10 +287,14 @@ BEGIN
     update beach_ranks.games
       set date = v_date, score_won = p_score_won, score_lost = p_score_lost
       where game_id = p_game_id;
+    insert into beach_ranks.log(log_id, object_type, object_id, what, who, date) 
+      values (nextval('beach_ranks.sq_log_id'), 'game', p_game_id, 'update '||p_date||' '||p_score_won||' '||p_score_lost, who, now());
   else
-    insert into beach_ranks.games(game_id, status, date, score_won, score_lost) 
-      values (nextval('beach_ranks.sq_game_id'), p_status, v_date, p_score_won, p_score_lost)
+    insert into beach_ranks.games(game_id, date, score_won, score_lost) 
+      values (nextval('beach_ranks.sq_game_id'), v_date, p_score_won, p_score_lost)
       returning game_id into v_game_id;
+    insert into beach_ranks.log(log_id, object_type, object_id, what, who, date) 
+      values (nextval('beach_ranks.sq_log_id'), 'game', v_game_id, 'insert '||p_date||' '||p_score_won||' '||p_score_lost, who, now());
     return v_game_id;
   end if;
 
@@ -269,7 +306,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION beach_ranks.save_game_player(p_game_id integer, p_player_id integer, p_win boolean)
+CREATE OR REPLACE FUNCTION beach_ranks.save_game_player(p_game_id integer, p_player_id integer, p_win boolean, who varchar)
 RETURNS integer AS $$
 DECLARE
   i integer;
@@ -281,9 +318,13 @@ BEGIN
     update beach_ranks.game_players
       set win = p_win
       where game_id = p_game_id and player_id = p_player_id;
+    insert into beach_ranks.log(log_id, object_type, object_id, what, who, date) 
+      values (nextval('beach_ranks.sq_log_id'), 'game_players', p_game_id||' '||p_player_id, 'update '||p_win, who, now());
   else
     insert into beach_ranks.game_players(game_id, player_id, win) 
       values (p_game_id, p_player_id, p_win);
+    insert into beach_ranks.log(log_id, object_type, object_id, what, who, date) 
+      values (nextval('beach_ranks.sq_log_id'), 'game_players', p_game_id||' '||p_player_id, 'insert '||p_win, who, now());
   end if;
 
   return 1;
@@ -296,7 +337,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION beach_ranks.save_game_rating(p_game_id integer, p_player_id integer,
   p_rating_code varchar, p_value_before double precision, p_value_after double precision,
-  p_accuracy_before double precision, p_accuracy_after double precision)
+  p_accuracy_before double precision, p_accuracy_after double precision, who varchar)
 RETURNS integer AS $$
 DECLARE
   i integer;
@@ -313,11 +354,17 @@ BEGIN
       set value_before = p_value_before, value_after = p_value_after,
           accuracy_before = p_accuracy_before, accuracy_after = p_accuracy_after
       where game_id = p_game_id and rating_id = v_rating_id;
+    insert into beach_ranks.log(log_id, object_type, object_id, what, who, date) 
+      values (nextval('beach_ranks.sq_log_id'), 'game_ratings', p_game_id||' '||v_rating_id, 
+        'update '||p_value_before||' '||p_value_after||' '||p_accuracy_before||' '||p_accuracy_after, who, now());
   else
     insert into beach_ranks.game_ratings(game_id, rating_id, value_before, value_after,
         accuracy_before, accuracy_after)
       values (p_game_id, v_rating_id, p_value_before, p_value_after,
         p_accuracy_before, p_accuracy_after);
+    insert into beach_ranks.log(log_id, object_type, object_id, what, who, date) 
+      values (nextval('beach_ranks.sq_log_id'), 'game_ratings', p_game_id||' '||v_rating_id, 
+        'insert '||p_value_before||' '||p_value_after||' '||p_accuracy_before||' '||p_accuracy_after, who, now());
   end if;
 
   return 1;

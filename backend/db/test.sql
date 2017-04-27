@@ -5,11 +5,18 @@ delete from beach_ranks.ratings_defs;
 delete from beach_ranks.games;
 delete from beach_ranks.game_players;
 delete from beach_ranks.game_ratings;
+delete from beach_ranks.log;
 
+select * from beach_ranks.log
+
+insert into beach_ranks.log(object_type, object_id, what, who, date) 
+      values ('game_ratings', 1||' '||2, 'insert '||' asdasd'||' '||' some', 'who', now());
 
 select date '2017-04-23T22:33:08.141243'
 
 select * from beach_ranks.players
+
+select player_id, status, nick, phone from beach_ranks.players where phone = '79161234567'
 
 select * from beach_ranks.ratings
 

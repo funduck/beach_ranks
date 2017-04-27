@@ -10,7 +10,7 @@ async def test_save_game_and_delete():
     p.set_rating("trueskill", [1200, 1])
     await p.save()
 
-    g = Game(date=datetime.now(), team_won=[p.id, p.id], team_lost=[p.id, p.id], score_won=15, score_lost=10)
+    g = Game(date=datetime.now(), team_won=[p, p], team_lost=[p, p], score_won=15, score_lost=10)
     await g.save()
 
     await g.delete_completely()
@@ -22,7 +22,7 @@ async def test_save_game_and_change():
     p.set_rating("trueskill", [1200, 1])
     await p.save()
 
-    g = Game(date=datetime.now(), team_won=[p.id, p.id], team_lost=[p.id, p.id], score_won=15, score_lost=10)
+    g = Game(date=datetime.now(), team_won=[p, p], team_lost=[p, p], score_won=15, score_lost=10)
     await g.save()
     g.score_won = 20
     await g.save()
@@ -36,7 +36,7 @@ async def test_save_game_and_load():
     p.set_rating("trueskill", [1200, 1])
     await p.save()
 
-    g = Game(date=datetime.now(), team_won=[p.id, p.id], team_lost=[p.id, p.id], score_won=15, score_lost=10)
+    g = Game(date=datetime.now(), team_won=[p, p], team_lost=[p, p], score_won=15, score_lost=10)
     await g.save()
 
     g2 = Game(id=g.id)
@@ -55,7 +55,7 @@ async def test_save_game_change_load():
     p.set_rating("trueskill", [1200, 1])
     await p.save()
 
-    g = Game(date=datetime.now(), team_won=[p.id, p.id], team_lost=[p.id, p.id], score_won=15, score_lost=10)
+    g = Game(date=datetime.now(), team_won=[p, p], team_lost=[p, p], score_won=15, score_lost=10)
     await g.save()
     g.score_won = 25
     await g.save()
@@ -76,14 +76,13 @@ async def test_save_game_and_rating_changes():
     p.set_rating("trueskill", [1200, 1])
     await p.save()
 
-    g = Game(date=datetime.now(), team_won=[p.id, p.id], team_lost=[p.id, p.id], score_won=15, score_lost=10)
+    g = Game(date=datetime.now(), team_won=[p, p], team_lost=[p, p], score_won=15, score_lost=10)
     await g.save()
     # same player, different way to get skill
-    await g.save_rating(p.id, "trueskill", p.get_rating("trueskill"), [1206, 0.86])
+    await g.save_rating(p, "trueskill", p.get_rating("trueskill"), [1206, 0.86])
 
     p.set_rating("trueskill", [1206, 0.86])
     await p.save()
 
     await g.delete_completely()
     await p.delete_completely()
-

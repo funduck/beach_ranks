@@ -15,18 +15,22 @@ async def test_all():
         await p[i].save()
 
     # game
-    g = Game(date=datetime.now(), team_won=[p[0].id, p[1].id], team_lost=[p[2].id, p[3].id], score_won=15, score_lost=10)
+    g = Game(date=datetime.now(), team_won=[p[0], p[1]], team_lost=[p[2], p[3]], score_won=15, score_lost=10)
     await g.save()
 
     # ratings
     for i in range(0, 4):
-        await g.save_rating(p[i].id, "trueskill", p[i].get_rating("trueskill"), [1205+2-i, 0.9])
+        await g.save_rating(p[i], "trueskill", p[i].get_rating("trueskill"), [1205+2-i, 0.9])
         p[i].set_rating("trueskill", [1205+2-i, 0.9])
         await p[i].save()
 
     # find game
     res = await Search.games(player=p[2])
     assert res[0].id == g.id
+
+    res = await Search.rating_change(g, p[0], "trueskill")
+    assert res["before"][0] == 1200
+    assert res["after"][0] == 1207
 
     # clear
     await g.delete_completely()

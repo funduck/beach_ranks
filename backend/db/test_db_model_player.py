@@ -3,9 +3,18 @@ import pytest
 import pytest_asyncio
 
 @pytest.mark.asyncio
-async def test_save_player_and_delete():
+async def test_save_player():
     p = Player(nick='NewPlayer', phone='79161234567')
     p.set_rating("trueskill", [1200, 1])
+    await p.save()
+    await p.delete_completely()
+
+@pytest.mark.asyncio
+async def test_save_player_and_update():
+    p = Player(nick='NewPlayer', phone='79161234567')
+    p.set_rating("trueskill", [1200, 1])
+    await p.save()
+    p.set_rating("trueskill", [1203, 0.1])
     await p.save()
     await p.delete_completely()
 
