@@ -12,7 +12,7 @@ from web_server import WebServer
 @pytest.fixture(scope='module')
 def server_credentials():
     host, port = 'localhost', 9999
-    server = WebServer(RequestHandler(), host=host, port=port)
+    server = WebServer(RequestHandler(), host=host, port=port, ssl_files=('cert.pem', 'pkey.pem'))
     server_process = mp.Process(target=server.run)
     server_process.start()
     time.sleep(1)
@@ -21,15 +21,19 @@ def server_credentials():
     server_process.join()
 
 
-async def send_http_get(host, port, resource='', params=None):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f'http://{host}:{port}{resource}', params=params) as resp:
+async def send_https_get(host, port, resource='', params=None):
+    sslcontext = ssl.create_default_context(cafile='cert.pem')
+    conn = aiohttp.TCPConnector(ssl_context=sslcontext)
+    async with aiohttp.ClientSession(connector=conn) as session:
+        async with session.get(f'https://{host}:{port}{resource}', params=params) as resp:
             return await resp.text()
 
 
-async def send_http_post(host, port, resource='', params=None):
-    async with aiohttp.ClientSession() as session:
-        async with session.post(f'http://{host}:{port}{resource}', params=params) as resp:
+async def send_https_post(host, port, resource='', params=None):
+    sslcontext = ssl.create_default_context(cafile='cert.pem')
+    conn = aiohttp.TCPConnector(ssl_context=sslcontext)
+    async with aiohttp.ClientSession(connector=conn) as session:
+        async with session.post(f'https://{host}:{port}{resource}', params=params) as resp:
             return await resp.text()
 
 
@@ -44,7 +48,7 @@ async def send_http_post(host, port, resource='', params=None):
 ])
 async def test_get_resources(server_credentials, resource, query):
     host, port = server_credentials
-    response = await send_http_get(host, port, resource, query)
+    response = await send_https_get(host, port, resource, query)
     resp_resource, resp_query = response.split('?')
 
     assert resource == resp_resource
@@ -62,7 +66,7 @@ async def test_get_resources(server_credentials, resource, query):
 ])
 async def test_post_resources(server_credentials, resource, query):
     host, port = server_credentials
-    response = await send_http_post(host, port, resource, query)
+    response = await send_https_post(host, port, resource, query)
     resp_resource, resp_query = response.split('?')
 
     assert resource == resp_resource

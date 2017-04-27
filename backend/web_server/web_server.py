@@ -8,19 +8,23 @@ from .request_handler import RequestHandler
 
 
 class WebServer:
-    def __init__(self, handler: RequestHandler, host=None, port=None, ssl_cafile=None):
+    def __init__(self, handler: RequestHandler, host=None, port=None, ssl_files=None):
         self._handler = handler
         self._host = host
         self._port = port
         self._get_prefix = 'handle_'
         self._post_prefix = 'post_'
-        self._ssl_cafile = ssl_cafile
+        self._ssl_files = ssl_files
         self._app = None
 
     def run(self):
         ssl_context = None
-        if self._ssl_cafile is not None:
-            ssl_context = ssl.create_default_context(cafile=self._ssl_cafile)
+        if self._ssl_files is not None:
+            if not isinstance(self._ssl_files, tuple):
+                raise TypeError('Expected ssl_files argument as tuple')
+
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_context.load_cert_chain(certfile=self._ssl_files[0], keyfile=self._ssl_files[1])
 
         self._app = web.Application()
         self._register_handlers()
