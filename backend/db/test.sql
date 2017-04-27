@@ -1,5 +1,4 @@
-﻿
-delete from beach_ranks.players;
+﻿delete from beach_ranks.players;
 delete from beach_ranks.ratings;
 delete from beach_ranks.ratings_defs;
 delete from beach_ranks.games;

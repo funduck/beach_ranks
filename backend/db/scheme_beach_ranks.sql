@@ -1,70 +1,45 @@
-﻿-- DROP ROLE beach_ranks;
+-- run under admin after initializing db;
 
-/*
-  CREATE ROLE beach_ranks LOGIN
-  ENCRYPTED PASSWORD 'md5d33e435c716fd8c46ce9a04067c01a80'
-  NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
-*/
---DROP DATABASE beach_ranks;
-/*
-CREATE DATABASE beach_ranks
-  WITH OWNER = beach_ranks
-       ENCODING = 'UTF8'
-       TABLESPACE = pg_default
-       LC_COLLATE = 'en_US.UTF-8'
-       LC_CTYPE = 'en_US.UTF-8'
-       CONNECTION LIMIT = -1
-       TEMPLATE template0;
-*/
+--DROP TABLE beach_ranks.players;
+--DROP TABLE beach_ranks.ratings;
+--DROP TABLE beach_ranks.ratings_defs;
+--DROP TABLE beach_ranks.games;
+--DROP TABLE beach_ranks.game_players;
+--DROP TABLE beach_ranks.game_ratings;
 
--- DROP SCHEMA beach_ranks;
-
-CREATE SCHEMA beach_ranks
-  AUTHORIZATION beach_ranks;
-
-/*
-DROP TABLE beach_ranks.players;
-DROP TABLE beach_ranks.ratings;
-DROP TABLE beach_ranks.ratings_defs;
-DROP TABLE beach_ranks.games;
-DROP TABLE beach_ranks.game_players;
-DROP TABLE beach_ranks.game_ratings;
-*/
-
--- DROP SEQUENCE beach_ranks.sq_player_id
+--DROP SEQUENCE beach_ranks.sq_player_id;
 
 CREATE SEQUENCE beach_ranks.sq_player_id
    INCREMENT 1
    START 1;
 ALTER SEQUENCE beach_ranks.sq_player_id
-  OWNER TO beach_ranks;
+  OWNER TO admin;
 
--- DROP SEQUENCE beach_ranks.sq_rating_id
+--DROP SEQUENCE beach_ranks.sq_rating_id;
 
 CREATE SEQUENCE beach_ranks.sq_rating_id
    INCREMENT 1
    START 1;
 ALTER SEQUENCE beach_ranks.sq_rating_id
-  OWNER TO beach_ranks;
+  OWNER TO admin;
 
--- DROP SEQUENCE beach_ranks.sq_game_id
+--DROP SEQUENCE beach_ranks.sq_game_id;
 
 CREATE SEQUENCE beach_ranks.sq_game_id
    INCREMENT 1
    START 1;
 ALTER SEQUENCE beach_ranks.sq_game_id
-  OWNER TO beach_ranks;
+  OWNER TO admin;
 
--- DROP SEQUENCE beach_ranks.sq_log_id
+--DROP SEQUENCE beach_ranks.sq_log_id;
 
 CREATE SEQUENCE beach_ranks.sq_log_id
    INCREMENT 1
    START 1;
 ALTER SEQUENCE beach_ranks.sq_log_id
-  OWNER TO beach_ranks;
+  OWNER TO admin;
 
-
--- DROP TABLE beach_ranks.players;
+--DROP TABLE beach_ranks.players;
 
 CREATE TABLE beach_ranks.players
 (
@@ -76,7 +51,7 @@ WITH (
   OIDS=FALSE
 );
 ALTER TABLE beach_ranks.players
-  OWNER TO beach_ranks;
+  OWNER TO admin;
 
 --DROP TABLE beach_ranks.ratings_defs;
 
@@ -89,7 +64,7 @@ WITH (
   OIDS=FALSE
 );
 ALTER TABLE beach_ranks.ratings_defs
-  OWNER TO beach_ranks;
+  OWNER TO admin;
 
 --DROP TABLE beach_ranks.ratings;
 
@@ -105,9 +80,9 @@ WITH (
   OIDS=FALSE
 );
 ALTER TABLE beach_ranks.ratings
-  OWNER TO beach_ranks;
+  OWNER TO admin;
 
--- DROP TABLE beach_ranks.games;
+--DROP TABLE beach_ranks.games;
 
 CREATE TABLE beach_ranks.games
 (
@@ -120,7 +95,7 @@ WITH (
   OIDS=FALSE
 );
 ALTER TABLE beach_ranks.games
-  OWNER TO beach_ranks;
+  OWNER TO admin;
 
 --DROP TABLE beach_ranks.game_players;
 
@@ -134,7 +109,7 @@ WITH (
   OIDS=FALSE
 );
 ALTER TABLE beach_ranks.game_players
-  OWNER TO beach_ranks;
+  OWNER TO admin;
 
 --DROP TABLE beach_ranks.game_ratings;
 
@@ -151,7 +126,7 @@ WITH (
   OIDS=FALSE
 );
 ALTER TABLE beach_ranks.game_ratings
-  OWNER TO beach_ranks;
+  OWNER TO admin;
 
 --DROP TABLE beach_ranks.log;
 
@@ -168,7 +143,7 @@ WITH (
   OIDS=FALSE
 );
 ALTER TABLE beach_ranks.log
-  OWNER TO beach_ranks;
+  OWNER TO admin;
 
 CREATE OR REPLACE FUNCTION beach_ranks.test()
 RETURNS integer AS $$
@@ -374,3 +349,11 @@ BEGIN
     return -1;*/
 END;
 $$ LANGUAGE plpgsql;
+
+GRANT ALL ON SCHEMA beach_ranks TO GROUP beach_ranks_group;
+
+GRANT ALL ON ALL TABLES IN SCHEMA beach_ranks TO GROUP beach_ranks_group;
+
+GRANT ALL ON ALL SEQUENCES IN SCHEMA beach_ranks TO GROUP beach_ranks_group;
+
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA beach_ranks TO GROUP beach_ranks_group;
