@@ -32,6 +32,33 @@ async def test_all():
     assert res["before"][0] == 1200
     assert res["after"][0] == 1207
 
+    # find games vs
+    res = await Search.games(player=p[2], vs_players=[p[1]])
+    assert res[0].id == g.id
+
+    # not find games vs
+    res = await Search.games(player=p[2], vs_players=[p[3]])
+    assert len(res) == 0
+
+    # find games with
+    res = await Search.games(player=p[2], with_players=[p[3]])
+    assert res[0].id == g.id
+
+    # not find games with
+    res = await Search.games(player=p[2], with_players=[p[0]])
+    assert len(res) == 0
+
+    # find games vs and with
+    res = await Search.games(player=p[2], vs_players=[p[1]], with_players=[p[3]])
+    assert res[0].id == g.id
+
+    # not find games vs
+    res = await Search.games(player=p[2], vs_players=[p[1]], with_players=[p[0]])
+    assert len(res) == 0
+
+    res = await Search.games(player=p[2], vs_players=[p[3]], with_players=[p[3]])
+    assert len(res) == 0
+
     # clear
     await g.delete_completely()
     for i in range(0, 4):

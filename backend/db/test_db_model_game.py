@@ -17,6 +17,17 @@ async def test_save_game_and_delete():
     await p.delete_completely()
 
 @pytest.mark.asyncio
+async def test_save_game_and_auto_save_players():
+    p = Player(nick='NewPlayer', phone='79161234567')
+    p.set_rating("trueskill", [1200, 1])
+
+    g = Game(date=datetime.now(), team_won=[p, p], team_lost=[p, p], score_won=15, score_lost=10)
+    await g.save(save_players=True)
+
+    await g.delete_completely()
+    await p.delete_completely()
+
+@pytest.mark.asyncio
 async def test_save_game_and_change():
     p = Player(nick='NewPlayer', phone='79161234567')
     p.set_rating("trueskill", [1200, 1])

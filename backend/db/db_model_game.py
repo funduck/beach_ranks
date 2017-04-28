@@ -50,7 +50,13 @@ class Game(object):
 	def sql_load_game_players(self):
 		return ['select player_id, win from beach_ranks.game_players where game_id = %s', [self.id]]
 
-	async def save(self, who='test'):
+	async def save(self, save_players=False, who='test'):
+		if save_players == True:
+			for p in self.team_won:
+				await p.save(who)
+			for p in self.team_lost:
+				await p.save(who)
+
 		res = await db.execute(self.sql_save_game(who))
 		self.id = res[0][0]
 		await db.execute(self.sql_save_teams(who))

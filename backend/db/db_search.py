@@ -6,10 +6,22 @@ import asyncio
 
 class Search(object):
     @staticmethod
-    def sql_find_all_games(player_id):
-        return ['select game_id from beach_ranks.game_players '\
-            'where player_id = %s', [player_id]
-            ]
+    def sql_find_all_games(player_id, vs_players=[], with_players=[]):
+        sql = 'select gp.game_id from beach_ranks.game_players gp'
+        params = [player_id]
+        if len(vs_players) > 0:
+            sql = sql + ', beach_ranks.game_players vs'
+        if len(with_players) > 0:
+            sql = sql + ', beach_ranks.game_players w'
+        sql = sql + ' where gp.player_id = %s'
+        for i in vs_players:
+            sql = sql + ' and gp.game_id = vs.game_id and gp.win != vs.win and vs.player_id = %s'
+            params.append(i)
+        for i in with_players:
+            sql = sql + ' and gp.game_id = w.game_id and gp.win = w.win and w.player_id = %s'
+            params.append(i)
+        sql = sql + ' order by gp.game_id desc'
+        return [sql, params]
 
     @staticmethod
     def sql_rating_change(game_id, player_id, rating_code):
@@ -27,13 +39,19 @@ class Search(object):
         return p
 
     @staticmethod
-    async def games(player=None, nick=None, phone=None):
-        if player is None:
-            p = await Search.player(nick=nick, phone=phone)
-        else:
-            p = player
+    async def games(player=None, vs_players=[], with_players=[]):
+        vs_players_ids = []
+        with_players_ids = []
+        for p in vs_players:
+            vs_players_ids.append(p.id)
+        for p in with_players:
+            with_players_ids.append(p.id)
 
-        res = await db.execute(Search.sql_find_all_games(p.id))
+        res = await db.execute(Search.sql_find_all_games(
+            player_id=player.id, 
+            vs_players=vs_players_ids, 
+            with_players=with_players_ids))
+
         games = []
         for r in res:
             g = Game(id=r[0])
