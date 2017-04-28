@@ -1,8 +1,10 @@
-from db_model_player import Player
-from db_model_game import Game
-import pytest
-import pytest_asyncio
 from datetime import datetime
+
+import pytest
+
+from .db_model_game import Game
+from .db_model_player import Player
+
 
 @pytest.mark.asyncio
 async def test_save_game_and_delete():
@@ -15,6 +17,7 @@ async def test_save_game_and_delete():
 
     await g.delete_completely()
     await p.delete_completely()
+
 
 @pytest.mark.asyncio
 async def test_save_game_and_auto_save_players():
@@ -41,6 +44,7 @@ async def test_save_game_and_change():
     await g.delete_completely()
     await p.delete_completely()
 
+
 @pytest.mark.asyncio
 async def test_save_game_and_load():
     p = Player(nick='NewPlayer', phone='79161234567')
@@ -59,6 +63,7 @@ async def test_save_game_and_load():
     await g.delete_completely()
     await g2.delete_completely()
     await p.delete_completely()
+
 
 @pytest.mark.asyncio
 async def test_save_game_change_load():
@@ -80,6 +85,7 @@ async def test_save_game_change_load():
     await g.delete_completely()
     await g2.delete_completely()
     await p.delete_completely()
+
 
 @pytest.mark.asyncio
 async def test_save_game_and_rating_changes():

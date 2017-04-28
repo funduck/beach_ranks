@@ -1,6 +1,6 @@
-from db import db
-from db_model_player import Player
-from db_model_game import Game
+from .db import db
+from .db_model_player import Player
+from .db_model_game import Game
 
 import asyncio
 
@@ -25,12 +25,13 @@ class Search(object):
 
     @staticmethod
     def sql_rating_change(game_id, player_id, rating_code):
-        return ['select value_before, value_after, accuracy_before, accuracy_after '\
-            'from beach_ranks.game_ratings gr, beach_ranks.ratings r '\
-            'where r.rating_id = gr.rating_id and r.player_id = %s and rating_code = %s '\
-            'and game_id = %s', 
+        return [
+            'select value_before, value_after, accuracy_before, accuracy_after '
+            'from beach_ranks.game_ratings gr, beach_ranks.ratings r '
+            'where r.rating_id = gr.rating_id and r.player_id = %s '
+            'and rating_code = %s and game_id = %s',
             [player_id, rating_code, game_id]
-            ]
+        ]
 
     @staticmethod
     async def player(nick=None, phone=None):
@@ -64,4 +65,7 @@ class Search(object):
     async def rating_change(game, player, rating_code):
         res = await db.execute(Search.sql_rating_change(game.id, player.id, rating_code))
         res = res[0]
-        return {"before": [res[0], res[2]], "after": [res[1], res[3]]}
+        return {
+            "before": [res[0], res[2]],
+            "after": [res[1], res[3]]
+        }

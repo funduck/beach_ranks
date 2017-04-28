@@ -8,19 +8,23 @@ from .request_handler import RequestHandler
 
 
 class WebServer:
-    def __init__(self, handler: RequestHandler, host=None, port=None, ssl_cafile=None):
+    def __init__(self, handler: RequestHandler, host=None, port=None, ssl_files=None):
         self._handler = handler
         self._host = host
         self._port = port
         self._get_prefix = 'handle_'
         self._post_prefix = 'post_'
-        self._ssl_cafile = ssl_cafile
+        self._ssl_files = ssl_files
         self._app = None
 
     def run(self):
         ssl_context = None
-        if self._ssl_cafile is not None:
-            ssl_context = ssl.create_default_context(cafile=self._ssl_cafile)
+        if self._ssl_files is not None:
+            if not isinstance(self._ssl_files, tuple):
+                raise TypeError('Expected ssl_files argument as tuple')
+
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_context.load_cert_chain(certfile=self._ssl_files[0], keyfile=self._ssl_files[1])
 
         self._app = web.Application()
         self._register_handlers()
@@ -44,7 +48,7 @@ class WebServer:
             elif attr.startswith(self._post_prefix):
                 method_name = attr[len(self._post_prefix):]
                 method = getattr(self._handler, attr)
-                self._app.router.add_get(f'/{method_name}',
+                self._app.router.add_post(f'/{method_name}',
                                          functools.partial(self._handle_wrapper, method))
                 logging.info(f'Registered web resource for POST: /{method_name}')
 

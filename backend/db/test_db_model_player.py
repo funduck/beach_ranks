@@ -1,6 +1,7 @@
-from db_model_player import Player
 import pytest
-import pytest_asyncio
+
+from .db_model_player import Player
+
 
 @pytest.mark.asyncio
 async def test_save_player():
@@ -8,6 +9,7 @@ async def test_save_player():
     p.set_rating("trueskill", [1200, 1])
     await p.save()
     await p.delete_completely()
+
 
 @pytest.mark.asyncio
 async def test_save_player_and_update():
@@ -17,6 +19,7 @@ async def test_save_player_and_update():
     p.set_rating("trueskill", [1203, 0.1])
     await p.save()
     await p.delete_completely()
+
 
 @pytest.mark.asyncio
 async def test_save_player_load_by_id():
@@ -31,6 +34,7 @@ async def test_save_player_load_by_id():
     assert r1[0] == r2[0]
     assert r1[1] == r2[1]
     await p.delete_completely()
+
 
 @pytest.mark.asyncio
 async def test_save_player_load_by_phone():
