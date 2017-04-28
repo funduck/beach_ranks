@@ -2,7 +2,7 @@ from .db import db
 
 
 class Player(object):
-    def __init__(self, id=0, nick=None, phone=None):
+    def __init__(self, id=None, nick=None, phone=''):
         self.id = id
         self.nick = nick
         self.phone = phone
@@ -11,7 +11,7 @@ class Player(object):
     def get_rating(self, rating_code):
         if self.rating[rating_code] is None:
             return None
-        return [self.rating[rating_code]["value"], self.rating[rating_code]["accuracy"]]
+        return [self.rating[rating_code]['value'], self.rating[rating_code]['accuracy']]
 
     def set_rating(self, rating_code, rating):
         self.rating[rating_code] = {'value': rating[0], 'accuracy': rating[1]}
@@ -46,20 +46,25 @@ class Player(object):
     def sql_load_player(self):
         if self.id is not None and self.id > 0:
             return ['select player_id, nick, phone from beach_ranks.players where player_id = %s', [self.id]]
+        if self.nick is not None:
+            return ['select player_id, nick, phone from beach_ranks.players where nick = %s', [self.nick]]
         if self.phone is not None:
             return ['select player_id, nick, phone from beach_ranks.players where phone = %s', [self.phone]]
 
     async def save(self, who='test'):
         res = await db.execute(self.sql_save_player(who))
         self.id = res[0][0]
-        await db.execute(self.sql_save_rating(who))
+        if len(self.rating) > 0:
+            await db.execute(self.sql_save_rating(who))
 
     async def delete_completely(self):
         await db.execute(self.sql_delete_completely_player())
 
     async def load(self):
         res = await db.execute(self.sql_load_player())
-        # TODO check, it returns one record
+        if len(res) == 0:
+            return
+
         res = res[0]
         self.id = res[0]
         self.nick = res[1]
