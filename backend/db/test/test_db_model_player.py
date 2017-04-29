@@ -1,6 +1,6 @@
 import pytest
 
-from .db_model_player import Player
+from db.db_model_player import Player
 
 
 @pytest.mark.asyncio

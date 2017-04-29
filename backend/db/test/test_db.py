@@ -1,6 +1,6 @@
 import pytest
 
-from .db import DB
+from db.db import DB
 
 
 @pytest.mark.asyncio

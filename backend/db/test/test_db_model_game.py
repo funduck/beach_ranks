@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pytest
 
-from .db_model_game import Game
-from .db_model_player import Player
+from db.db_model_game import Game
+from db.db_model_player import Player
 
 
 @pytest.mark.asyncio

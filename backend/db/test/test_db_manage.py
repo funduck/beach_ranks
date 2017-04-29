@@ -2,7 +2,7 @@ import pytest
 
 from db.db_model_game import Game
 from db.db_model_player import Rating, Player
-from .db_manage import Manage
+from db.db_manage import Manage
 
 
 @pytest.mark.asyncio
