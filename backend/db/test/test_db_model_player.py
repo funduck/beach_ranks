@@ -1,12 +1,12 @@
 import pytest
 
-from db.db_model_player import Player
+from db.db_model_player import Player, Rating
 
 
 @pytest.mark.asyncio
 async def test_save_player():
     p = Player(nick='NewPlayer', phone='79161234567')
-    p.set_rating("trueskill", [1200, 1])
+    p.set_rating("trueskill", Rating(value=1200, accuracy=1))
     await p.save()
     await p.delete_completely()
 
@@ -14,9 +14,9 @@ async def test_save_player():
 @pytest.mark.asyncio
 async def test_save_player_and_update():
     p = Player(nick='NewPlayer', phone='79161234567')
-    p.set_rating("trueskill", [1200, 1])
+    p.set_rating("trueskill", Rating(value=1200, accuracy=1))
     await p.save()
-    p.set_rating("trueskill", [1203, 0.1])
+    p.set_rating("trueskill", Rating(value=1203, accuracy=0.1))
     await p.save()
     await p.delete_completely()
 
@@ -24,7 +24,7 @@ async def test_save_player_and_update():
 @pytest.mark.asyncio
 async def test_save_player_load_by_id():
     p = Player(nick='NewPlayer', phone='79161234567')
-    p.set_rating("trueskill", [1200, 1])
+    p.set_rating("trueskill", Rating(value=1200, accuracy=1))
     await p.save()
     l = Player(id=p.id)
     await l.load()
@@ -39,7 +39,7 @@ async def test_save_player_load_by_id():
 @pytest.mark.asyncio
 async def test_save_player_load_by_phone():
     p = Player(nick='NewPlayer', phone='79161234567')
-    p.set_rating("trueskill", [1200, 1])
+    p.set_rating("trueskill", Rating(value=1200, accuracy=1))
     await p.save()
     l = Player(phone=p.phone)
     await l.load()

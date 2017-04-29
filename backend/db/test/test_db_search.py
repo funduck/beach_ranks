@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 
 from db.db_model_game import Game
-from db.db_model_player import Player
+from db.db_model_player import Player, Rating
 from db.db_search import Search
 
 
@@ -13,7 +13,7 @@ async def test_all():
     p = []
     for i in range(0, 4):
         p.append(Player(nick='NewPlayer'+str(i), phone='7916123456'+str(i)))
-        p[i].set_rating("trueskill", [1200+i, 1])
+        p[i].set_rating("trueskill", Rating(value = 1200 + i, accuracy=1))
         await p[i].save()
 
     # game
@@ -22,8 +22,8 @@ async def test_all():
 
     # ratings
     for i in range(0, 4):
-        await g.save_rating(p[i], "trueskill", p[i].get_rating("trueskill"), [1205+2-i, 0.9])
-        p[i].set_rating("trueskill", [1205+2-i, 0.9])
+        await g.save_rating(p[i], "trueskill", p[i].get_rating("trueskill"), Rating(value=1205 + 2 - i, accuracy=0.9))
+        p[i].set_rating("trueskill", Rating(value=1205 + 2 - i, accuracy=0.9))
         await p[i].save()
 
     # find game
