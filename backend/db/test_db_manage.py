@@ -1,9 +1,7 @@
-from datetime import datetime
-
 import pytest
 
-from .db_model_game import Game
-from .db_model_player import Player
+from db.db_model_game import Game
+from db.db_model_player import Rating, Player
 from .db_manage import Manage
 
 
@@ -11,11 +9,27 @@ from .db_manage import Manage
 async def test_all():
     # create players
     players = []
+    new_ratings = {}
     for i in range(0, 4):
-        players.append(await Manage.add_nick(nick='NewPlayer'+str(i)))
+        player = await Manage.add_nick(nick=f'NewPlayer{i}', rating=Rating(value=1200, accuracy=0))
+        new_ratings[player.nick] = Rating(value=1300, accuracy=0)
+        players.append(player)
 
-    g = await Manage.add_game(players_won=[players[0], players[1]], players_lost=[players[2], players[3]], 
-        score_won=23, score_lost=21)
+    g = await Manage.add_game(nicks_won=[players[0].nick, players[1].nick],
+                              nicks_lost=[players[2].nick, players[3].nick], new_ratings=new_ratings,
+                              score_won=23, score_lost=21)
+
+    test_g = Game(id=g.id)
+    await test_g.load()
+
+    assert [p.nick for p in test_g.team_won] == ['NewPlayer0', 'NewPlayer1']
+    assert [p.nick for p in test_g.team_lost] == ['NewPlayer2', 'NewPlayer3']
+
+    for p in test_g.team_won:
+        assert p.get_rating('trueskill') == [1300, 0]
+
+    assert test_g.score_won == 23
+    assert test_g.score_lost == 21
 
     # clear
     await g.delete_completely()

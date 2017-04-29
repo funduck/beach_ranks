@@ -4,7 +4,7 @@ from .db_model_game import Game
 
 import asyncio
 
-class Search(object):
+class Search:
     @staticmethod
     def sql_find_all_games(player_id, vs_players=[], with_players=[]):
         sql = 'select gp.game_id from beach_ranks.game_players gp'

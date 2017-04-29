@@ -9,7 +9,7 @@ class DBException(Exception):
     pass
 
 
-class DB(object):
+class DB:
     def __init__(self):
         self.dsn = 'dbname=beach_ranks user=beach_ranks password=beachranks host=127.0.0.1 port=5432'
         self.do_fetch_regexp = re.compile("^(SELECT|select)")

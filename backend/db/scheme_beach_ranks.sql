@@ -1,13 +1,13 @@
 -- run under admin after initializing db;
 
---DROP TABLE beach_ranks.players;
---DROP TABLE beach_ranks.ratings;
---DROP TABLE beach_ranks.ratings_defs;
---DROP TABLE beach_ranks.games;
---DROP TABLE beach_ranks.game_players;
---DROP TABLE beach_ranks.game_ratings;
+DROP TABLE IF EXISTS beach_ranks.players;
+DROP TABLE IF EXISTS beach_ranks.ratings;
+DROP TABLE IF EXISTS beach_ranks.ratings_defs;
+DROP TABLE IF EXISTS beach_ranks.games;
+DROP TABLE IF EXISTS beach_ranks.game_players;
+DROP TABLE IF EXISTS beach_ranks.game_ratings;
 
---DROP SEQUENCE beach_ranks.sq_player_id;
+DROP SEQUENCE beach_ranks.sq_player_id;
 
 CREATE SEQUENCE beach_ranks.sq_player_id
    INCREMENT 1
@@ -15,7 +15,7 @@ CREATE SEQUENCE beach_ranks.sq_player_id
 ALTER SEQUENCE beach_ranks.sq_player_id
   OWNER TO admin;
 
---DROP SEQUENCE beach_ranks.sq_rating_id;
+DROP SEQUENCE IF EXISTS beach_ranks.sq_rating_id;
 
 CREATE SEQUENCE beach_ranks.sq_rating_id
    INCREMENT 1
@@ -23,7 +23,7 @@ CREATE SEQUENCE beach_ranks.sq_rating_id
 ALTER SEQUENCE beach_ranks.sq_rating_id
   OWNER TO admin;
 
---DROP SEQUENCE beach_ranks.sq_game_id;
+DROP SEQUENCE IF EXISTS beach_ranks.sq_game_id;
 
 CREATE SEQUENCE beach_ranks.sq_game_id
    INCREMENT 1
@@ -31,7 +31,7 @@ CREATE SEQUENCE beach_ranks.sq_game_id
 ALTER SEQUENCE beach_ranks.sq_game_id
   OWNER TO admin;
 
---DROP SEQUENCE beach_ranks.sq_log_id;
+DROP SEQUENCE IF EXISTS beach_ranks.sq_log_id;
 
 CREATE SEQUENCE beach_ranks.sq_log_id
    INCREMENT 1
@@ -39,7 +39,7 @@ CREATE SEQUENCE beach_ranks.sq_log_id
 ALTER SEQUENCE beach_ranks.sq_log_id
   OWNER TO admin;
 
---DROP TABLE beach_ranks.players;
+DROP TABLE IF EXISTS beach_ranks.players;
 
 CREATE TABLE beach_ranks.players
 (
@@ -53,7 +53,7 @@ WITH (
 ALTER TABLE beach_ranks.players
   OWNER TO admin;
 
---DROP TABLE beach_ranks.ratings_defs;
+DROP TABLE IF EXISTS beach_ranks.ratings_defs;
 
 CREATE TABLE beach_ranks.ratings_defs
 (
@@ -66,7 +66,7 @@ WITH (
 ALTER TABLE beach_ranks.ratings_defs
   OWNER TO admin;
 
---DROP TABLE beach_ranks.ratings;
+DROP TABLE IF EXISTS beach_ranks.ratings;
 
 CREATE TABLE beach_ranks.ratings
 (
@@ -82,7 +82,7 @@ WITH (
 ALTER TABLE beach_ranks.ratings
   OWNER TO admin;
 
---DROP TABLE beach_ranks.games;
+DROP TABLE IF EXISTS beach_ranks.games;
 
 CREATE TABLE beach_ranks.games
 (
@@ -97,7 +97,7 @@ WITH (
 ALTER TABLE beach_ranks.games
   OWNER TO admin;
 
---DROP TABLE beach_ranks.game_players;
+DROP TABLE IF EXISTS beach_ranks.game_players;
 
 CREATE TABLE beach_ranks.game_players
 (
@@ -111,7 +111,7 @@ WITH (
 ALTER TABLE beach_ranks.game_players
   OWNER TO admin;
 
---DROP TABLE beach_ranks.game_ratings;
+DROP TABLE IF EXISTS beach_ranks.game_ratings;
 
 CREATE TABLE beach_ranks.game_ratings
 (
@@ -128,7 +128,7 @@ WITH (
 ALTER TABLE beach_ranks.game_ratings
   OWNER TO admin;
 
---DROP TABLE beach_ranks.log;
+DROP TABLE IF EXISTS beach_ranks.log;
 
 CREATE TABLE beach_ranks.log
 (
@@ -299,7 +299,7 @@ BEGIN
     insert into beach_ranks.game_players(game_id, player_id, win) 
       values (p_game_id, p_player_id, p_win);
     insert into beach_ranks.log(log_id, object_type, object_id, what, who, date) 
-      values (nextval('beach_ranks.sq_log_id'), 'game_players', p_game_id||' '||p_player_id, 'insert '||p_win, who, now());
+      values (nextval('beach_ranks.sq_log_id'), 'game_plaxyers', p_game_id||' '||p_player_id, 'insert '||p_win, who, now());
   end if;
 
   return 1;

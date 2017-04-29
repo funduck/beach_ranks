@@ -1,10 +1,10 @@
 --run under postgres
 
-DROP DATABASE beach_ranks;
+DROP DATABASE IF EXISTS beach_ranks;
 
-DROP ROLE admin;
-DROP ROLE beach_ranks;
-DROP ROLE beach_ranks_group;
+DROP ROLE IF EXISTS admin;
+DROP ROLE IF EXISTS beach_ranks;
+DROP ROLE IF EXISTS beach_ranks_group;
 
 CREATE ROLE beach_ranks_group
   NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
