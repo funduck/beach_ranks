@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS beach_ranks.games;
 DROP TABLE IF EXISTS beach_ranks.game_players;
 DROP TABLE IF EXISTS beach_ranks.game_ratings;
 
-DROP SEQUENCE beach_ranks.sq_player_id;
+DROP SEQUENCE IF EXISTS beach_ranks.sq_player_id;
 
 CREATE SEQUENCE beach_ranks.sq_player_id
    INCREMENT 1
