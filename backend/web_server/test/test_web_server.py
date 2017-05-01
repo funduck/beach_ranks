@@ -1,15 +1,15 @@
 import multiprocessing as mp
-import ssl
 import time
 
 import aiohttp
 import pytest
+import requests
 
 from web_server import RequestHandler
 from web_server import WebServer
 
 
-@pytest.fixture(scope='module')
+@pytest.yield_fixture(scope='module')
 def server_credentials():
     host, port = 'localhost', 9999
     server = WebServer(RequestHandler(), host=host, port=port)
@@ -21,19 +21,16 @@ def server_credentials():
     server_process.join()
 
 
-async def send_http_get(host, port, resource='', params=None):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f'http://{host}:{port}{resource}', params=params) as resp:
-            return await resp.text()
+def send_http_get(host, port, resource='', params=None):
+    r = requests.get(f'http://{host}:{port}{resource}', params=params)
+    return r.text
 
 
-async def send_http_post(host, port, resource='', params=None):
-    async with aiohttp.ClientSession() as session:
-        async with session.post(f'http://{host}:{port}{resource}', params=params) as resp:
-            return await resp.text()
+def send_http_post(host, port, resource='', params=None):
+    r = requests.post(f'http://{host}:{port}{resource}', params=params)
+    return r.text
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize('resource,query', [
     ('/', None),
     ('/', {'p1': '1', 'p2': 'str'}),
@@ -42,9 +39,9 @@ async def send_http_post(host, port, resource='', params=None):
     ('/help', None),
     ('/help', {'value': 'commands'}),
 ])
-async def test_get_resources(server_credentials, resource, query):
+def test_get_resources(server_credentials, resource, query):
     host, port = server_credentials
-    response = await send_http_get(host, port, resource, query)
+    response = send_http_get(host, port, resource, query)
     resp_resource, resp_query = response.split('?')
 
     assert resource == resp_resource
@@ -54,15 +51,14 @@ async def test_get_resources(server_credentials, resource, query):
         assert '{}' == resp_query
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize('resource,query', [
     ('/nick', {'value': 'k1nkreet'}),
     ('/forget', {'value': 'k1nkreet'}),
     ('/game', {'value': 'game'}),
 ])
-async def test_post_resources(server_credentials, resource, query):
+def test_post_resources(server_credentials, resource, query):
     host, port = server_credentials
-    response = await send_http_post(host, port, resource, query)
+    response = send_http_post(host, port, resource, query)
     resp_resource, resp_query = response.split('?')
 
     assert resource == resp_resource
