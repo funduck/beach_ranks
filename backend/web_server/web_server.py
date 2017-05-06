@@ -52,9 +52,9 @@ class WebServer:
                                          functools.partial(self._handle_wrapper, method))
                 logging.info(f'Registered web resource for POST: /{method_name}')
 
-    def _handle_wrapper(self, handler, request: web.Request):
+    async def _handle_wrapper(self, handler, request: web.Request):
         args = dict(zip(request.query.keys(), request.query.values()))
-        text = handler(args)
+        text = await handler(args)
         if not isinstance(text, str):
             raise TypeError(f'request handler returned invalid object {type(text)}, string expected')
 

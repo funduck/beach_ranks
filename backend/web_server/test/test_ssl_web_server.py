@@ -1,15 +1,12 @@
 import multiprocessing as mp
-import ssl
 import time
 
-import aiohttp
 import os
 import pytest
 import requests
-
-from web_server import RequestHandler
 from web_server import WebServer
 
+from web_server.test.mock_request_handler import MockRequestHandler
 
 cert_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -17,7 +14,7 @@ cert_path = os.path.dirname(os.path.abspath(__file__))
 @pytest.yield_fixture(scope='module')
 def server_credentials():
     host, port = 'localhost', 9999
-    server = WebServer(RequestHandler(), host=host, port=port,
+    server = WebServer(MockRequestHandler(), host=host, port=port,
                        ssl_files=(f'{cert_path}/cert.pem', f'{cert_path}/pkey.pem'))
     server_process = mp.Process(target=server.run)
     server_process.start()
