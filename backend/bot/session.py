@@ -4,26 +4,27 @@ from .common_types import Contact, Button
 from .telegram_interaction import TelegramInteraction, TelegramInMessage, TelegramOutMessage
 
 
-class AbstractSession():
-    state = None
+# used for parsing request into command with input
+# and for composing response
+telegram = TelegramInteraction()
 
-    # used for parsing request into command with input
-    # and for composing response
-    telegram = TelegramInteraction()
-    
-    # queue of responses
-    responses = []
-    
+
+class AbstractSession():
+    def __init__(self):
+        self.state = None
+        # queue of responses
+        self.responses = []
+        
     # creates message via telegram_interactions and puts to resposes
     def show_message(self, as_reply, message=None, buttons=None):
         self.responses.append(
-            self.telegram.show_message(as_reply, message, buttons)
+            telegram.show_message(as_reply, message, buttons)
         )
     
     # creates message via telegram_interactions and puts to resposes
     def show_contacts(self, as_reply, contacts):
         self.responses.append(
-            self.telegram.show_contacts(as_reply, contacts)
+            telegram.show_contacts(as_reply, contacts)
         )
     
     @staticmethod
@@ -131,7 +132,9 @@ class SessionWorkflow(xworkflows.Workflow):
 
 
 class Session(AbstractSession, xworkflows.WorkflowEnabled):
-    state = SessionWorkflow()
+
+    def start(self):
+        self.state = SessionWorkflow()
 
     # A list of transitions and checks performed on an input without command
     # check returns index of transition, like switch
