@@ -1,6 +1,7 @@
 import pytest
 from bot.session import Session
 from bot.common_types import Contact
+from bot.common import ifNone
 
 
 class EmptyPlayer():
@@ -10,8 +11,13 @@ class EmptyPlayer():
         
         
 class EmptyGame():
-    def __init__(self):
-        pass
+    def __init__(self, id=None, date=None, team_won=None, team_lost=None, score_won=None, score_lost=None):
+        self.id = id
+        self.date = date
+        self.team_won = ifNone(team_won, [])  # array of Players in team that won
+        self.team_lost = ifNone(team_lost, [])  # array of Players in team that lost
+        self.score_won = score_won
+        self.score_lost = score_lost
 
         
 class EmptyManage():
