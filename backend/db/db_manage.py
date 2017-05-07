@@ -1,7 +1,7 @@
+from datetime import datetime
+
 from .db_model_player import Player
 from .db_model_game import Game
-
-from datetime import datetime
 
 
 class ManageException(Exception):

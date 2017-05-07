@@ -1,14 +1,16 @@
+import datetime
+
 from .db import db
 from .db_model_player import Player
-import datetime
+from .common import ifNone
 
 
 class Game:
     def __init__(self, id=None, date=None, team_won=None, team_lost=None, score_won=None, score_lost=None):
         self.id = id
         self.date = date
-        self.team_won = team_won  # array of Players in team that won
-        self.team_lost = team_lost  # array of Players in team that lost
+        self.team_won = ifNone(team_won, [])  # array of Players in team that won
+        self.team_lost = ifNone(team_lost, [])  # array of Players in team that lost
         self.score_won = score_won
         self.score_lost = score_lost
 
