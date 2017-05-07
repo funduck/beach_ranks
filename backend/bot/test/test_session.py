@@ -3,26 +3,70 @@ from bot.session import Session
 from bot.common_types import Contact
 
 
+class EmptyPlayer():
+    def __init__(self, name=None, phone=None):
+        self.name = None
+        self.phone = None
+        
+        
+class EmptyGame():
+    def __init__(self):
+        pass
+
+        
+class EmptyManage():
+    def new_game(self):
+        return EmptyGame()
+        
+    def new_player(self, name=None, phone=None):
+        return EmptyPlayer(name, phone)
+
+
+class EmptySearch():
+    def player(self, name=None, phone=None, name_like=None):
+        if name == 'exists':
+            return [EmptyPlayer(name, phone)]
+        
+        if name_like == 'several':
+            return [
+                EmptyPlayer('several1', '732422322'),
+                EmptyPlayer('several2', '732422323'),
+                EmptyPlayer('several3', '732422324')
+            ]
+        
+        return []
+
+
 def test_init():
     s = Session()
 
     
-def test_add_1_known_player():
+def test_send_contact_1_known_player():
     s = Session()
-    s.start()
+    s.start(search=EmptySearch(), manage=EmptyManage())
     for i in (
         ('game', ''),
-        ('game_player_confirm', Contact(name='known player', phone='7823434'))
+        ('game_player_confirm', Contact(name='exists', phone='7823434'))
     ):
         s.process_command(command=i[0], input=i[1])
 
+        
+def test_send_contact_1_unknown_player():
+    s = Session()
+    s.start(search=EmptySearch(), manage=EmptyManage())
+    for i in (
+        ('game', ''),
+        ('game_player_confirm', Contact(name='notexists', phone='7823435'))
+    ):
+        s.process_command(command=i[0], input=i[1])
+        
 
 def test_add_1_unknown_player():
     s = Session()
-    s.start()
+    s.start(search=EmptySearch(), manage=EmptyManage())
     for i in (
         ('game', ''),
-        ('game_add_new_player', 'unknown player'),
+        ('', 'notexists'),
         ('game_new_player_phone', '79126632745')
     ):
         s.process_command(command=i[0], input=i[1])
@@ -30,13 +74,11 @@ def test_add_1_unknown_player():
 
 def test_add_1_known_and_1_unknown_player():
     s = Session()
-    s.start()
+    s.start(search=EmptySearch(), manage=EmptyManage())
     for i in (
         ('game', ''),
-        ('game_player_confirm', 'known player'),
-        ('game_add_new_player', 'unknown player'),
+        ('game_player_confirm', Contact(name='exists', phone='7823434')),
+        ('', 'unknown player'),
         ('game_new_player_phone', '79126632745')
     ):
         s.process_command(command=i[0], input=i[1])
-
-

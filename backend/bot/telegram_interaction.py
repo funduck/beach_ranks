@@ -25,12 +25,6 @@ TelegramOutMessage = namedtuple('TelegramOutMessage', [
 
 
 class TelegramInteraction():
-    buttons = {}
-    messages = {}
-    perform_request = None # function (request) performing request to telegram API
-    on_user_input = None # function (command, input, as_reply) called on user incoming messages
-    on_user_inline_input = None # function (command, input, as_reply) called on user inline input
-
     @staticmethod
     def parse_message(message, bot_name='beachranks_bot'):
         kind = None

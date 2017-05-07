@@ -10,8 +10,15 @@ telegram = TelegramInteraction()
 
 
 class AbstractSession():
+
+    state = None
+
+    # A list of transitions and checks performed on an input without command
+    # check returns tuple (index of transition, parsed args)
+    # (source state, check, transitions)
+    raw_input_transitions = ()
+    
     def __init__(self):
-        self.state = None
         # queue of responses
         self.responses = []
         
@@ -43,6 +50,7 @@ class AbstractSession():
             
         transition = getattr(self, command)
         if transition is None:
+            print(f'\nERROR: transition not found: {command}')
             return False
             
         args = AbstractSession.parse_input(input)
@@ -52,9 +60,9 @@ class AbstractSession():
     
     def _on_user_raw_input(self, input):
         raw_input_transition = None
-        for t in self.raw_input_transitions:
-            if self.state.name == self.raw_input_transitions[t][0]:
-                raw_input_transition = self.raw_input_transitions
+        for rit in self.raw_input_transitions:
+            if self.state.name == rit[0]:
+                raw_input_transition = rit
                 break
                 
         if raw_input_transition is None:
@@ -63,33 +71,33 @@ class AbstractSession():
         check = getattr(self, raw_input_transition[1])
         
         if check is None:
-            print('\nERROR: ', 'check is undefined', raw_input_transition[1])
+            print(f'\nERROR: check is undefined {raw_input_transition[1]}')
             return False
 
         args = AbstractSession.parse_input(input)
         
-        # check returns index of target transition or -1 if check fails
+        # check returns tuple (index of target transition or -1 if check fails, parsed arguments)
         c = check(args)
-        if c > 0:
-            transition = getattr(self, raw_input_transition[2][c])
+        if c[0] >= 0:
+            transition = getattr(self, raw_input_transition[2][c[0]])
             if transition is None:
-                print('\nERROR: ', 'transition is not defined', raw_input_transition[2][c])
+                print(f'\nERROR: transition is not defined {raw_input_transition[2][c[0]]}')
                 return False
             
-            transition(args)
+            transition(c[1])
             return True
         else:
             print('\ncheck failed')
             return False
             
     def process_command(self, command, input):
-        if command is not None:
+        if command is not None and len(command) > 0:
             response = self._on_user_command(command, input)
         else:
             response = self._on_user_raw_input(input)
 
         if not response:
-            print('\nFailed to process command: \'{command}\' input: \'{input}\'')
+            print(f'\nFailed to process command: \'{command}\' input: \'{input}\'')
             
         return response
             
@@ -127,49 +135,87 @@ class SessionWorkflow(xworkflows.Workflow):
     initial_state = 'init'
     
     def log_transition(self, transition, from_state, instance, *args, **kwargs):
-        # print('\n', transition, 'from_state:', from_state)
+        #print('\n', transition, 'from_state:', from_state)
         pass
 
 
 class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
-    def start(self):
-        self.state = SessionWorkflow()
+    state = SessionWorkflow()
+
+    def start(self, search, manage):
+        
+        self.search = search
+        self.manage = manage
+        
+        self._game = None
+        self._player = None
 
     # A list of transitions and checks performed on an input without command
-    # check returns index of transition, like switch
+    # check returns tuple (index of transition, parsed args)
     # (source state, check, transitions)
     raw_input_transitions = (
         ('s_game_adding_player', 'check_adding_player', ('game_player_confirm', 'game_add_new_player')),
-        ('s_game_new_player_phone', 'check_adding_players_phone', ('game_new_player_phone', 'game_player_confirm'))
+        ('s_game_new_player_phone', 'check_adding_players_phone', 'game_new_player_phone')
     )
     
     ''' Checks '''
+    # return tuple (index of transition, parsed arguments)
     def check_adding_player(self, args):
-        return 0
+        if type(args[0]) == Contact:
+            return (0, args[0])
+            
+        players = self.search.player(name_like=args[0])
+        if len(players) == 1:
+            return (0, players[0])
+        else:
+            return (1, Contact(name=args[0], phone=None))
 
     def check_adding_players_phone(self, args):
-        return 1
+        try:
+            phone = int(self._normalize_phone(args))
+            return (0, str(phone))
+        except ValueError:
+            # show message error
+            return (-1)
 
     ''' Transitions '''
     @xworkflows.transition()
     def game(self, args):
-        pass
+        self._game = self.manage.new_game()
         
     @xworkflows.transition()
-    def game_player_confirm(self, args):
-        pass
-        
+    def game_player_confirm(self, player):
+        if type(player) == Contact:
+            player = self.search.player(name=player.name, phone=player.phone)
+
+        self._player = player
+    
     @xworkflows.transition()
-    def game_add_new_player(self, args):
-        pass
+    def game_add_new_player(self, contact):
+        self._player = self.manage.new_player(name=contact.name)
         
     @xworkflows.transition()
     def game_new_player_phone(self, args):
-        pass
+        self._player.phone = self._normalize_phone(args)
         
     @xworkflows.on_enter_state('s_game_player_confirmed')
     def _on_s_game_player_confirmed(self, res, *args, **kwargs):
-        # TODO should check there are enough players
+        self._add_player_to_game()
+        # TODO should check if enough players
         # now continue adding forever
         self.game_next_player()
+    
+    @xworkflows.on_enter_state('s_game_adding_player')
+    def _on_s_game_adding_player(self, res, *args, **kwargs):
+        # TODO show message 'enter player name or push search button'
+        pass
+    
+    def _normalize_phone(self, args):
+        # TODO remove spaces
+        return args[0]
+    
+    def _add_player_to_game(self):
+        # TODO add self._player to self._game
+        # show message about it
+        pass
