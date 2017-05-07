@@ -3,11 +3,6 @@ from .common_types import Contact, Button
 from .abstract_session import AbstractSession
 from .telegram_interaction import TelegramInteraction, TelegramInMessage, TelegramOutMessage
 
-# used for parsing request into command with input
-# and for composing response
-telegram = TelegramInteraction()
-
-
 class SessionWorkflow(xworkflows.Workflow):
     # A list of state names, adding 's_' helps to ease reading
     states = (
@@ -60,7 +55,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     
     ''' Checks '''
     # return tuple (index of transition, parsed arguments)
-    def check_adding_player(self, args):
+    def check_adding_player(self, args, processing_message=None):
         if type(args[0]) == Contact:
             return (0, args[0])
             
@@ -70,7 +65,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         else:
             return (1, Contact(name=args[0], phone=None))
 
-    def check_adding_players_phone(self, args):
+    def check_adding_players_phone(self, args, processing_message=None):
         try:
             phone = int(self._normalize_phone(args))
             return (0, str(phone))
@@ -78,7 +73,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             # show message error
             return (-1, None)
             
-    def check_setting_score(self, args):
+    def check_setting_score(self, args, processing_message=None):
         try:
             int(args[0])
             return (0, args[0])
@@ -88,53 +83,61 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     ''' Transitions '''
     @xworkflows.transition()
-    def game(self, args=None):
+    def game(self, args=None, processing_message=None):
         self._game = self.manage.new_game()
         
     @xworkflows.transition()
-    def game_player_confirm(self, player):
+    def game_player_confirm(self, player, processing_message=None):
         if type(player) == Contact:
             player = self.search.player(name=player.name, phone=player.phone)
 
         self._player = player
     
     @xworkflows.transition()
-    def game_add_new_player(self, contact):
+    def game_add_new_player(self, contact, processing_message=None):
         self._player = self.manage.new_player(name=contact.name)
         
     @xworkflows.transition()
-    def game_new_player_phone(self, args=None):
-        self._player.phone = self._normalize_phone(args)
+    def game_new_player_phone(self, phone, processing_message=None):
+        self._player.phone = self._normalize_phone(phone)
         
     @xworkflows.transition()
-    def game_set_score_won(self, score):
+    def game_set_score_won(self, score, processing_message=None):
         self._game.score_won = score
     
     @xworkflows.transition()
-    def game_set_score_lost(self, score):
+    def game_set_score_lost(self, score, processing_message=None):
         self._game.score_lost = score
+        pass
     
     @xworkflows.transition()
-    def game_set_scores(self, args=None):
+    def game_set_scores(self, arg=None, processing_message=None):
         pass
         
     @xworkflows.transition()
-    def game_next_player(self, args=None):
+    def game_next_player(self, arg=None, processing_message=None):
         pass
         
     @xworkflows.on_enter_state('s_game_player_confirmed')
-    def _on_s_game_player_confirmed(self, res, *args, **kwargs):
+    def _on_s_game_player_confirmed(self, transition_res=None, transition_arg=None, processing_message=None):
         self._add_player_to_game()
         if len(self._game.team_won) < 2 or len(self._game.team_lost) < 2:
-            self.game_next_player()
+            self.game_next_player(processing_message=processing_message)
         else:
             print(f'\nAll players added: {self._game.team_won} {self._game.team_lost}')
-            self.game_set_scores()
+            self.game_set_scores(processing_message=processing_message)
     
     @xworkflows.on_enter_state('s_game_adding_player')
-    def _on_s_game_adding_player(self, res, *args, **kwargs):
-        # TODO show message 'enter player name or push search button'
-        pass
+    def _on_s_game_adding_player(self, transition_res=None, transition_arg=None, processing_message=None):
+        self.show_message(
+            message='Enter player\'s name',
+            buttons=[Button(
+                text='search',
+                switch_inline='/player ',
+                callback=None
+            )],
+            processing_message=processing_message
+        )
     
     def _normalize_phone(self, args=None):
         p = ''

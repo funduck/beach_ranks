@@ -2,6 +2,7 @@ import pytest
 from bot.session import Session
 from bot.common_types import Contact
 from bot.common import ifNone
+from bot.telegram_interaction import MessageIds, TelegramInMessage
 
 
 class EmptyPlayer():
@@ -43,6 +44,19 @@ class EmptySearch():
         return []
 
 
+sample_message = TelegramInMessage(
+    kind='message',
+    command='not important',
+    input='not important too',
+    ids=MessageIds(
+        user_id=1,
+        inline_query_id=None,
+        message_id=2,
+        chat_id=3
+    )
+)
+
+
 def test_init():
     s = Session()
 
@@ -54,9 +68,9 @@ def test_send_contact_1_known_player():
         ('game', ''),
         ('game_player_confirm', Contact(name='exists', phone='7823434'))
     ):
-        s.process_command(command=i[0], input=i[1])
+        s.process_command(command=i[0], input=i[1], processing_message=sample_message)
 
-        
+
 def test_send_contact_1_unknown_player():
     s = Session()
     s.start(search=EmptySearch(), manage=EmptyManage())
@@ -64,7 +78,7 @@ def test_send_contact_1_unknown_player():
         ('game', ''),
         ('game_player_confirm', Contact(name='notexists', phone='7823435'))
     ):
-        s.process_command(command=i[0], input=i[1])
+        s.process_command(command=i[0], input=i[1], processing_message=sample_message)
         
 
 def test_add_1_unknown_player():
@@ -75,7 +89,7 @@ def test_add_1_unknown_player():
         ('', 'notexists'),
         ('game_new_player_phone', '79126632745')
     ):
-        s.process_command(command=i[0], input=i[1])
+        s.process_command(command=i[0], input=i[1], processing_message=sample_message)
 
 
 def test_add_1_known_and_1_unknown_player():
@@ -87,4 +101,4 @@ def test_add_1_known_and_1_unknown_player():
         ('', 'unknown player'),
         ('game_new_player_phone', '79126632745')
     ):
-        s.process_command(command=i[0], input=i[1])
+        s.process_command(command=i[0], input=i[1], processing_message=sample_message)

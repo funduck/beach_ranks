@@ -1,5 +1,10 @@
 import xworkflows
 from .common_types import Contact
+from .telegram_interaction import TelegramInteraction, TelegramInMessage, TelegramOutMessage
+
+# used for parsing request into command with input
+# and for composing response
+telegram = TelegramInteraction()
 
 
 class AbstractSession():
@@ -16,13 +21,23 @@ class AbstractSession():
         self.responses = []
         
     # creates message via telegram_interactions and puts to resposes
-    def show_message(self, as_reply, message=None, buttons=None):
+    def show_message(self, message=None, buttons=None, processing_message=None):
+        if processing_message is not None:
+            as_reply = processing_message.ids
+        else:
+            # this will lead to exception
+            as_reply = None
         self.responses.append(
             telegram.show_message(as_reply, message, buttons)
         )
     
     # creates message via telegram_interactions and puts to resposes
-    def show_contacts(self, as_reply, contacts):
+    def show_contacts(self, contacts, processing_message=None):
+        if processing_message is not None:
+            as_reply = processing_message.ids
+        else:
+            # this will lead to exception
+            as_reply = None
         self.responses.append(
             telegram.show_contacts(as_reply, contacts)
         )
@@ -37,7 +52,7 @@ class AbstractSession():
             
         return input.split(' ')
     
-    def _on_user_command(self, command, input):
+    def _on_user_command(self, command, input, processing_message=None):
         if command is None:
             return False
             
@@ -47,11 +62,11 @@ class AbstractSession():
             return False
             
         args = AbstractSession.parse_input(input)
-        transition(args)
+        transition(args, processing_message)
         
         return True
     
-    def _on_user_raw_input(self, input):
+    def _on_user_raw_input(self, input, processing_message=None):
         raw_input_transition = None
         for rit in self.raw_input_transitions:
             if self.state.name == rit[0]:
@@ -70,29 +85,31 @@ class AbstractSession():
         args = AbstractSession.parse_input(input)
         
         # check returns tuple (index of target transition or -1 if check fails, parsed arguments)
-        c = check(args)
+        c = check(args, processing_message)
         if c[0] >= 0:
             transition = getattr(self, raw_input_transition[2][c[0]])
             if transition is None:
                 print(f'\nERROR: transition is not defined \'{raw_input_transition[2][c[0]]}\'')
                 return False
             
-            transition(c[1])
+            transition(c[1], processing_message)
             return True
         else:
             print(f'\ncheck \'{raw_input_transition[1]}\' failed')
             return False
             
-    def process_command(self, command, input):
+    def process_command(self, command, input, processing_message=None):
         print(f'\nProcessing command: \'{command}\' \'{input}\'')
         if command is not None and len(command) > 0:
-            response = self._on_user_command(command, input)
+            response = self._on_user_command(command, input, processing_message)
         else:
-            response = self._on_user_raw_input(input)
+            response = self._on_user_raw_input(input, processing_message)
 
         if not response:
             print(f'\nFailed to process command: \'{command}\' input: \'{input}\'')
-            
+        
+        print(self.responses[len(self.responses) - 1])
+        
         return response
             
     # returns array of responses, should be performed in asc order
@@ -100,7 +117,7 @@ class AbstractSession():
     def process_request(self, r, bot_name='beachranks_bot'):
         m = telegram.parse_message(message=r, bot_name=bot_name)
         
-        if self.process_command(command=m.command, input=m.input):
+        if self.process_command(command=m.command, input=m.input, processing_message=m):
             responses = self.responses
             self.responses = []
             return responses
