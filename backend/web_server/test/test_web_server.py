@@ -1,18 +1,17 @@
 import multiprocessing as mp
 import time
 
-import aiohttp
 import pytest
 import requests
-
-from web_server import RequestHandler
 from web_server import WebServer
+
+from web_server.test.mock_request_handler import MockRequestHandler
 
 
 @pytest.yield_fixture(scope='module')
 def server_credentials():
     host, port = 'localhost', 9999
-    server = WebServer(RequestHandler(), host=host, port=port)
+    server = WebServer(MockRequestHandler(), host=host, port=port)
     server_process = mp.Process(target=server.run)
     server_process.start()
     time.sleep(1)
