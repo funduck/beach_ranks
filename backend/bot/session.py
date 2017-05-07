@@ -85,6 +85,10 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     @xworkflows.transition()
     def game(self, args=None, processing_message=None):
         self._game = self.manage.new_game()
+        self.show_message(
+            message='Adding game\n1) enter players, won team, then lost\n2) enter scores, won first',
+            processing_message=processing_message
+        )
         
     @xworkflows.transition()
     def game_player_confirm(self, player, processing_message=None):
@@ -96,6 +100,10 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     @xworkflows.transition()
     def game_add_new_player(self, contact, processing_message=None):
         self._player = self.manage.new_player(name=contact.name)
+        self.show_message(
+            message='Someone new, enter his phone number',
+            processing_message=processing_message
+        )
         
     @xworkflows.transition()
     def game_new_player_phone(self, phone, processing_message=None):
@@ -104,23 +112,45 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     @xworkflows.transition()
     def game_set_score_won(self, score, processing_message=None):
         self._game.score_won = score
+        self.show_message(
+            message='Ok, now score of a looser',
+            processing_message=processing_message
+        )
     
     @xworkflows.transition()
     def game_set_score_lost(self, score, processing_message=None):
         self._game.score_lost = score
-        pass
+        self.show_message(
+            message='Ok, done with scores',
+            processing_message=processing_message
+        )
     
     @xworkflows.transition()
     def game_set_scores(self, arg=None, processing_message=None):
-        pass
+        self.show_message(
+            message='Enter score of a winner',
+            processing_message=processing_message
+        )
         
     @xworkflows.transition()
     def game_next_player(self, arg=None, processing_message=None):
-        pass
+        self.show_message(
+            message='Enter next player\'s name',
+            buttons=[Button(
+                text='search',
+                switch_inline='/player ',
+                callback=None
+            )],
+            processing_message=processing_message
+        )
         
     @xworkflows.on_enter_state('s_game_player_confirmed')
     def _on_s_game_player_confirmed(self, transition_res=None, transition_arg=None, processing_message=None):
         self._add_player_to_game()
+        self.show_message(
+            message='Player added',
+            processing_message=processing_message
+        )
         if len(self._game.team_won) < 2 or len(self._game.team_lost) < 2:
             self.game_next_player(processing_message=processing_message)
         else:
@@ -153,5 +183,3 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             if len(g.team_lost) < 2:
                 g.team_lost.append(self._player)
         print(f'\nPlayer added: \'{self._game.team_won}\' \'{self._game.team_lost}\'')
-        # show message about it
-        pass

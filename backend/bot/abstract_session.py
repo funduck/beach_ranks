@@ -27,9 +27,9 @@ class AbstractSession():
         else:
             # this will lead to exception
             as_reply = None
-        self.responses.append(
-            telegram.show_message(as_reply, message, buttons)
-        )
+        m = telegram.show_message(as_reply, message, buttons)
+        print(m)
+        self.responses.append(m)
     
     # creates message via telegram_interactions and puts to resposes
     def show_contacts(self, contacts, processing_message=None):
@@ -38,9 +38,8 @@ class AbstractSession():
         else:
             # this will lead to exception
             as_reply = None
-        self.responses.append(
-            telegram.show_contacts(as_reply, contacts)
-        )
+        m = telegram.show_contacts(as_reply, contacts)
+        self.responses.append(m)
     
     @staticmethod
     def parse_input(input):
@@ -107,8 +106,6 @@ class AbstractSession():
 
         if not response:
             print(f'\nFailed to process command: \'{command}\' input: \'{input}\'')
-        
-        print(self.responses[len(self.responses) - 1])
         
         return response
             
