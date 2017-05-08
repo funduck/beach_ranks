@@ -4,7 +4,7 @@ Rating = namedtuple('Rating', ['value', 'accuracy'])
 
 
 class Player:
-    def __init__(self, player_id=None, nick=None, rating=None, user_id=None, phone=None):
+    def __init__(self, player_id=0, nick=None, rating=None, user_id=None, phone=None):
         self.id = player_id
         self.nick = nick
         self.rating = {} if rating is None else rating
@@ -22,6 +22,6 @@ class Player:
 
     def equal(self, other):
         return self.id == other.id \
-        and self.nick == other.nick \
-        and self.user_id == other.user_id \
-        and self.phone == other.phone
+               and self.nick == other.nick \
+               and self.user_id == other.user_id \
+               and self.phone == other.phone

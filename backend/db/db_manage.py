@@ -1,7 +1,10 @@
 from datetime import datetime
+from typing import List
 
-from .db_model_player import Player
-from .db_model_game import Game
+from model import Game, Player, Rating
+
+from db.db_search import Search
+from .db import db
 
 
 class ManageException(Exception):
@@ -52,3 +55,75 @@ class Manage:
             # TODO real rating
             await g.save_rating(p, "trueskill", p.get_rating("trueskill"), new_ratings[p.nick])
         return g
+
+    @staticmethod
+    def sql_save_player(player: Player, who):
+        # table Players is (player_id number, nick varchar, phone varchar)
+        sql = 'select * from beach_ranks.save_player(%s, %s, %s, %s);'
+        params = [player.id, player.nick, player.phone, who]
+
+        return [sql, params]
+
+    @staticmethod
+    def sql_save_rating(player: Player, who):
+        # table Ratings is (rating_id varchar, player_id number, rating_code varchar, value number, accuracy number)
+        sql = ''
+        params = []
+        for r_code in player.rating:
+            rating = player.rating[r_code]
+            sql += 'select * from beach_ranks.save_rating(%s, %s, %s, %s, %s);'
+            params.extend([player.id, r_code, rating.value, rating.accuracy, who])
+
+        return [sql, params]
+
+    @staticmethod
+    def sql_save_game(game: Game, who):
+        # table Games is (game_id number, date date, score_won number, score_lost number)
+        return [
+            'select * from beach_ranks.save_game(%s, %s, %s, %s, %s);',
+            [game.id, game.date.isoformat(), game.score_won, game.score_lost, who]
+        ]
+
+    @staticmethod
+    def sql_save_game_players(game: Game, players_won: List[Player], players_lost: List[Player], who):
+        # table Game_players is (game_id integer, player_id integer, win boolean)
+        sqls = ''
+        params = []
+        for p in players_won:
+            sqls += 'select * from beach_ranks.save_game_player(%s, %s, %s, %s);'
+            params.extend([game.id, p.id, True, who])
+
+        for p in players_lost:
+            sqls += 'select * from beach_ranks.save_game_player(%s, %s, %s, %s);'
+            params.extend([game.id, p.id, False, who])
+
+        return [sqls, params]
+
+    @staticmethod
+    def sql_save_rating(game: Game, player_id, rating_code, rating_before: Rating, rating_after: Rating, who):
+        return [
+            'select * from beach_ranks.save_game_rating(%s, %s, %s, %s, %s, %s, %s, %s);',
+            [game.id, player_id, rating_code, rating_before.value, rating_after.value,
+             rating_before.accuracy, rating_after.accuracy, who]
+        ]
+
+    @staticmethod
+    async def save_player(player: Player, who='test'):
+        res = await db.execute(Manage.sql_save_player(who))
+        player.id = res[0][0]
+        if len(player.rating) > 0:
+            await db.execute(Manage.sql_save_rating(who))
+
+    @staticmethod
+    async def save_game(game: Game, who='test'):
+        res = await db.execute(Manage.sql_save_game(game, who))
+        game.id = res[0][0]
+        players_won = [await Search.load_player_by_nick(nick) for nick in game.nicks_won]
+        players_lost = [await Search.load_player_by_nick(nick) for nick in game.nicks_lost]
+        db.execute(Manage.sql_save_game_players(game, players_won, players_lost, who))
+        for p in players_won + players_lost:
+            await db.execute(Manage.sql_save_rating(game, p.id, 'trueskill', game.rating_before(p.nick),
+                                                  game.rating_after(p.nick), who))
+
+
+
