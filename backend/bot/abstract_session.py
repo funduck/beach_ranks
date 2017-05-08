@@ -1,3 +1,5 @@
+import logging
+import sys
 import xworkflows
 from .common_types import Contact
 from .telegram_interaction import TelegramInteraction, TelegramInMessage, TelegramOutMessage
@@ -6,6 +8,13 @@ from .telegram_interaction import TelegramInteraction, TelegramInMessage, Telegr
 # and for composing response
 telegram = TelegramInteraction()
 
+logger = logging.getLogger('AbstractSession')
+logger.setLevel(logging.INFO)
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(0)
+formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s  %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 class AbstractSession():
 
@@ -28,7 +37,9 @@ class AbstractSession():
             # this will lead to exception
             as_reply = None
         m = telegram.show_message(as_reply, message, buttons)
-        print(m)
+        
+        logger.debug(m)
+        
         self.responses.append(m)
     
     # creates message via telegram_interactions and puts to resposes
@@ -39,6 +50,9 @@ class AbstractSession():
             # this will lead to exception
             as_reply = None
         m = telegram.show_contacts(as_reply, contacts)
+        
+        logger.debug(m)
+        
         self.responses.append(m)
     
     @staticmethod
@@ -57,7 +71,7 @@ class AbstractSession():
             
         transition = getattr(self, command)
         if transition is None:
-            print(f'\nERROR: transition not found: {command}')
+            logger.error(f'transition not found: {command}')
             return False
             
         args = AbstractSession.parse_input(input)
@@ -78,7 +92,7 @@ class AbstractSession():
         check = getattr(self, raw_input_transition[1])
         
         if check is None:
-            print(f'\nERROR: check is undefined {raw_input_transition[1]}')
+            logger.error(f'check is undefined {raw_input_transition[1]}')
             return False
 
         args = AbstractSession.parse_input(input)
@@ -86,32 +100,47 @@ class AbstractSession():
         # check returns tuple (index of target transition or -1 if check fails, parsed arguments)
         c = check(args, processing_message)
         if c[0] >= 0:
-            transition = getattr(self, raw_input_transition[2][c[0]])
+            if type(raw_input_transition[2]) == tuple:
+                if c[0] >= len(raw_input_transition[2]):
+                    logger.error(f'check returned > number of options \'{raw_input_transition}\'')
+                    return False
+                else:
+                    transition_name = raw_input_transition[2][c[0]]
+            else:
+                if c[0] > 0:
+                    logger.error(f'check returned >0, while there is only 1 option \'{raw_input_transition}\'')
+                    return False
+                else:
+                    transition_name = raw_input_transition[2]
+            transition = getattr(self, transition_name)
             if transition is None:
-                print(f'\nERROR: transition is not defined \'{raw_input_transition[2][c[0]]}\'')
+                logger.error(f'transition is not defined \'{transition_name}\'')
                 return False
             
             transition(c[1], processing_message)
             return True
         else:
-            print(f'\ncheck \'{raw_input_transition[1]}\' failed')
+            logger.debug(f'check \'{raw_input_transition[1]}\' refused')
             return False
             
     def process_command(self, command, input, processing_message=None):
-        print(f'\nProcessing command: \'{command}\' \'{input}\'')
+        logger.info(f'Processing command: \'{command}\' \'{input}\'')
+        
         if command is not None and len(command) > 0:
             response = self._on_user_command(command, input, processing_message)
         else:
             response = self._on_user_raw_input(input, processing_message)
 
         if not response:
-            print(f'\nFailed to process command: \'{command}\' input: \'{input}\'')
+            logger.info(f'Refused to process command: \'{command}\' input: \'{input}\'')
         
         return response
             
     # returns array of responses, should be performed in asc order
     # usually will contain only 1 item
     def process_request(self, r, bot_name='beachranks_bot'):
+        logger.info(f'Processing request: \'{r}\' \'{bot_name}\'')
+        
         m = telegram.parse_message(message=r, bot_name=bot_name)
         
         if self.process_command(command=m.command, input=m.input, processing_message=m):

@@ -1,7 +1,18 @@
 import json
 import re
+import logging
+import sys
 from collections import namedtuple
 from .common_types import Contact, Button
+
+
+logger = logging.getLogger('TelegramInteraction')
+logger.setLevel(logging.INFO)
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(0)
+formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s  %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 
 MessageIds = namedtuple('MessageIds', [
@@ -70,7 +81,7 @@ class TelegramInteraction():
             return
 
         if command is not None:
-            #print('parsing command:', command)
+            logger.log(0, 'parsing command \'{command}\'')
             m = re.search(f'^(@{bot_name} |)(\/\w*|)(@{bot_name}|)(\s*)(.*)', command)
             
             if input is None and m is not None:
@@ -86,7 +97,7 @@ class TelegramInteraction():
                     if command is not None:
                         command = command.group(1)
                 
-        #print('command:', command, 'input:', input)
+        logger.log(0, 'command \'{command}\' input \'{input}\'')
             
         # if something wrong, it throws exception
 
@@ -99,7 +110,7 @@ class TelegramInteraction():
 
     def show_message(self, as_reply, message=None, buttons=None):
         if as_reply.chat_id is None:
-            print('ERROR: Can show message only when know chat_id')
+            logger.error('Can show message only when know chat_id \'{as_reply}\'')
             return
         r = {
             'method': 'sendMessage',
@@ -114,7 +125,8 @@ class TelegramInteraction():
             r['body']['reply_to_message_id'] = as_reply.message_id
 
         if buttons is not None:
-            # now support 1 row only, when change to multirow, change it in scenarios too
+            logger.warn('now support 1 row only, when change to multirow, change it in scenarios too')
+            
             all_btns = [[]]
             btns = all_btns[0]
             for b in buttons:
@@ -142,7 +154,7 @@ class TelegramInteraction():
 
     def show_contacts(self, as_reply, contacts):
         if as_reply.inline_query_id is None:
-            print('ERROR: Can show contacts only on inline query')
+            logger.error('Can show contacts only on inline query \'{as_reply}\'')
             return
         c = []
         for i in range(0, len(contacts)):
@@ -164,26 +176,3 @@ class TelegramInteraction():
             method=r['method'],
             body=r['body']
         ) 
-
-'''    def on_user_message(self, message):
-        parsed = TelegramInteraction.parse_message(message)
-        if parsed['kind'] == 'message':
-            if self.on_user_input is not None:
-                self.on_user_input(command=parsed['command'], input=parsed['input'], as_reply=parsed['reply'])
-            else:
-                print('ERROR: on_user_input is not defined')
-        
-        if parsed['kind'] == 'inline':
-            if self.on_user_inline_input is not None:
-                self.on_user_inline_input(command=parsed['command'], input=parsed['input'], as_reply=parsed['reply'])
-            else:
-                print('ERROR: on_user_inline_input is not defined')
-                
-        if parsed['kind'] == 'callback':
-            req_id = parsed['body']['data']
-            
-            if req_id in self.buttons:
-                self.buttons[req_id].callback(self.buttons[req_id].arg)
-                del self.buttons[req_id]
-            else:
-                print('no button callback for', req_id)'''

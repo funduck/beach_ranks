@@ -1,8 +1,13 @@
 import pytest
+import logging
 from bot.session import Session
 from bot.common_types import Contact
 from bot.common import ifNone
 from bot.telegram_interaction import MessageIds, TelegramInMessage
+
+
+l = logging.getLogger('AbstractSession')
+l.setLevel(logging.DEBUG)
 
 
 class EmptyPlayer():
@@ -19,6 +24,9 @@ class EmptyGame():
         self.team_lost = ifNone(team_lost, [])  # array of Players in team that lost
         self.score_won = score_won
         self.score_lost = score_lost
+        
+    def save(self, who):
+        print(f'\nGame saved by {who}')
 
         
 class EmptyManage():
@@ -64,6 +72,7 @@ def test_init():
 def test_send_contact_1_known_player():
     s = Session()
     s.start(search=EmptySearch(), manage=EmptyManage())
+    
     for i in (
         ('game', ''),
         ('game_player_confirm', Contact(name='exists', phone='7823434'))
@@ -74,6 +83,7 @@ def test_send_contact_1_known_player():
 def test_send_contact_1_unknown_player():
     s = Session()
     s.start(search=EmptySearch(), manage=EmptyManage())
+    
     for i in (
         ('game', ''),
         ('game_player_confirm', Contact(name='notexists', phone='7823435'))
@@ -84,6 +94,7 @@ def test_send_contact_1_unknown_player():
 def test_add_1_unknown_player():
     s = Session()
     s.start(search=EmptySearch(), manage=EmptyManage())
+    
     for i in (
         ('game', ''),
         ('', 'notexists'),
@@ -95,10 +106,30 @@ def test_add_1_unknown_player():
 def test_add_1_known_and_1_unknown_player():
     s = Session()
     s.start(search=EmptySearch(), manage=EmptyManage())
+    
     for i in (
         ('game', ''),
         ('game_player_confirm', Contact(name='exists', phone='7823434')),
         ('', 'unknown player'),
         ('game_new_player_phone', '79126632745')
+    ):
+        s.process_command(command=i[0], input=i[1], processing_message=sample_message)
+        
+def test_add_4_known_players_and_set_scores():
+    s = Session()
+    s.start(search=EmptySearch(), manage=EmptyManage())
+    
+    for i in (
+        ('game', ''),
+        ('game_player_confirm', Contact(name='exists', phone='7823431')),
+        ('game_player_confirm', Contact(name='exists', phone='7823432')),
+        ('game_player_confirm', Contact(name='exists', phone='7823433')),
+        ('game_player_confirm', Contact(name='exists', phone='7823434')),
+        ('', 'not a number'),
+        ('', '14'),
+        ('', '15'),
+        ('', '-1'),
+        ('', '14'),
+        ('', '13')
     ):
         s.process_command(command=i[0], input=i[1], processing_message=sample_message)

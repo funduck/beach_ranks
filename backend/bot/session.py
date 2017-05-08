@@ -1,7 +1,19 @@
 import xworkflows
+import logging
+import sys
 from .common_types import Contact, Button
 from .abstract_session import AbstractSession
 from .telegram_interaction import TelegramInteraction, TelegramInMessage, TelegramOutMessage
+
+
+logger = logging.getLogger('Session')
+logger.setLevel(logging.INFO)
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(0)
+formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s  %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
 
 class SessionWorkflow(xworkflows.Workflow):
     # A list of state names, adding 's_' helps to ease reading
@@ -11,7 +23,8 @@ class SessionWorkflow(xworkflows.Workflow):
         ('s_game_player_confirmed', 'Add player to game success'),
         ('s_game_new_player_phone', 'Adding phone for new player in a game'),
         ('s_game_set_won_score', 'Setting score of a winner'),
-        ('s_game_set_lost_score', 'Setting score of a looser')
+        ('s_game_set_lost_score', 'Setting score of a looser'),
+        ('s_game_created', 'All fields of Game are filled')
     )
     
     # Transition names are bot commands
@@ -25,12 +38,13 @@ class SessionWorkflow(xworkflows.Workflow):
         ('game_next_player', 's_game_player_confirmed', 's_game_adding_player'),
         ('game_set_scores', 's_game_player_confirmed', 's_game_set_won_score'),
         ('game_set_score_won', 's_game_set_won_score', 's_game_set_lost_score'),
-        ('game_set_score_lost', 's_game_set_lost_score', 'init')
+        ('game_set_score_lost', 's_game_set_lost_score', 's_game_created'),
+        ('game_save', 's_game_created', 'init')
     )
     initial_state = 'init'
     
     def log_transition(self, transition, from_state, instance, *args, **kwargs):
-        print('\n', transition, 'from_state:', from_state)
+        logger.log(0, f'\'{transition}\' from_state \'{from_state}\'')
 
 
 class Session(AbstractSession, xworkflows.WorkflowEnabled):
@@ -70,15 +84,41 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             phone = int(self._normalize_phone(args))
             return (0, str(phone))
         except ValueError:
-            # show message error
+            self.show_message(
+                message='Phone number is incorrect',
+                processing_message=processing_message
+            )
             return (-1, None)
             
     def check_setting_score(self, args, processing_message=None):
         try:
-            int(args[0])
-            return (0, args[0])
+            score = int(args[0])
+            if score >= 0:
+                if self.state.is_s_game_set_lost_score or score > 14:
+                    if self.state.is_s_game_set_lost_score and score + 1 >= self._game.score_won:
+                        self.show_message(
+                            message='Score of a looser +1 should be < score of a winner',
+                            processing_message=processing_message
+                        )
+                        return (-1, None)
+                    return (0, score)
+                else:
+                    self.show_message(
+                        message='Score of a winner should be >= 15',
+                        processing_message=processing_message
+                    )
+                    return (-1, None)
+            else:
+                self.show_message(
+                    message='Score should be >= 0',
+                    processing_message=processing_message
+                )
+                return (-1, None)
         except ValueError:
-            # show message error
+            self.show_message(
+                message='Score is not a number',
+                processing_message=processing_message
+            )
             return (-1, None)
 
     ''' Transitions '''
@@ -144,6 +184,14 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             processing_message=processing_message
         )
         
+    @xworkflows.transition()
+    def game_save(self, processing_message=None):
+        self._game.save(who=processing_message.ids.user_id)
+        self.show_message(
+            message='Game saved',
+            processing_message=processing_message
+        )
+    
     @xworkflows.on_enter_state('s_game_player_confirmed')
     def _on_s_game_player_confirmed(self, transition_res=None, transition_arg=None, processing_message=None):
         self._add_player_to_game()
@@ -154,7 +202,6 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         if len(self._game.team_won) < 2 or len(self._game.team_lost) < 2:
             self.game_next_player(processing_message=processing_message)
         else:
-            print(f'\nAll players added: {self._game.team_won} {self._game.team_lost}')
             self.game_set_scores(processing_message=processing_message)
     
     @xworkflows.on_enter_state('s_game_adding_player')
@@ -169,6 +216,10 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             processing_message=processing_message
         )
     
+    @xworkflows.on_enter_state('s_game_created')
+    def _on_s_game_created(self, transition_res=None, transition_arg=None, processing_message=None):
+        self.game_save(processing_message)
+    
     def _normalize_phone(self, args=None):
         p = ''
         for i in args:
@@ -182,4 +233,3 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         else:
             if len(g.team_lost) < 2:
                 g.team_lost.append(self._player)
-        print(f'\nPlayer added: \'{self._game.team_won}\' \'{self._game.team_lost}\'')
