@@ -34,6 +34,7 @@ class SessionWorkflow(xworkflows.Workflow):
     # (transition, source states, target state).
     transitions = (
         ('game', 'init', 's_game_adding_player'),
+        ('find_player', 's_game_adding_player', 's_game_adding_player'),
         ('game_player_confirm', 's_game_adding_player', 's_game_player_confirmed'),
         ('game_add_new_player', 's_game_adding_player', 's_game_new_player_phone'),
         ('game_new_player_phone', 's_game_new_player_phone', 's_game_player_confirmed'),
@@ -72,9 +73,9 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     ''' Checks '''
     # return tuple (index of transition, parsed arguments)
     def check_adding_player(self, args, processing_message=None):
-        if type(args[0]) == Player:
-            return (0, args[0])
-            
+        if type(args) == Player:
+            return (0, args)
+        
         players = self.search.player(name_like=args[0])
         if len(players) == 1:
             return (0, players[0])
@@ -133,6 +134,15 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         )
         
     @xworkflows.transition()
+    def find_player(self, args=None, processing_message=None):
+        if args is not None and len(args[0]) > 0:
+            players = self.search.player(name_like=args[0])
+            self.show_contacts(
+                contacts=players, 
+                processing_message=processing_message
+            )
+
+    @xworkflows.transition()
     def game_player_confirm(self, player, processing_message=None):
         self._player = player
     
@@ -173,15 +183,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         
     @xworkflows.transition()
     def game_next_player(self, arg=None, processing_message=None):
-        self.show_message(
-            message='Enter next player\'s name',
-            buttons=[Button(
-                text='search',
-                switch_inline='/player ',
-                callback=None
-            )],
-            processing_message=processing_message
-        )
+        pass
         
     @xworkflows.transition()
     def game_save(self, processing_message=None):
@@ -209,7 +211,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             message='Enter player\'s name',
             buttons=[Button(
                 text='search',
-                switch_inline='/player ',
+                switch_inline='/find_player ',
                 callback=None
             )],
             processing_message=processing_message

@@ -68,16 +68,18 @@ class AbstractSession():
     def _on_user_command(self, command, input, processing_message=None):
         if command is None:
             return False
-            
-        transition = getattr(self, command)
-        if transition is None:
+        try:
+            transition = getattr(self, command)
+        except AttributeError:
             logger.error(f'transition not found: {command}')
             return False
-            
         args = AbstractSession.parse_input(input)
-        transition(args, processing_message)
-        
-        return True
+        try:
+            transition(args, processing_message)
+            return True
+        except xworkflows.base.InvalidTransitionError:
+            logger.warn(f'unexpected command {command} in this state {self.state.name}')
+            return False
     
     def _on_user_raw_input(self, input, processing_message=None):
         raw_input_transition = None
@@ -116,9 +118,12 @@ class AbstractSession():
             if transition is None:
                 logger.error(f'transition is not defined \'{transition_name}\'')
                 return False
-            
-            transition(c[1], processing_message)
-            return True
+            try:
+                transition(c[1], processing_message)
+                return True
+            except xworkflows.base.InvalidTransitionError:
+                logger.warn(f'unexpected command {transition_name} in this state {self.state.name}')
+                return False
         else:
             logger.debug(f'check \'{raw_input_transition[1]}\' refused')
             return False
@@ -143,9 +148,7 @@ class AbstractSession():
         
         m = telegram.parse_message(message=r, bot_name=bot_name)
         
-        if self.process_command(command=m.command, input=m.input, processing_message=m):
-            responses = self.responses
-            self.responses = []
-            return responses
-        
-        return []
+        self.process_command(command=m.command, input=m.input, processing_message=m)
+        responses = self.responses
+        self.responses = []
+        return responses
