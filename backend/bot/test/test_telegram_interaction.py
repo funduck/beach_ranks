@@ -3,7 +3,7 @@ import re
 import json
 from bot.telegram_interaction import TelegramInteraction, TelegramInMessage, TelegramOutMessage
 from bot.common_types import Button
-from model.player import Player
+from model import Player
 
 
 bot_name = 'beachranks_bot'

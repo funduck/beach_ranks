@@ -4,7 +4,7 @@ import logging
 import sys
 from collections import namedtuple
 from .common_types import Button
-from model.player import Player
+from model import Player
 
 
 logger = logging.getLogger('TelegramInteraction')

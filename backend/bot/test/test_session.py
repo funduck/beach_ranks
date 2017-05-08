@@ -1,6 +1,6 @@
 import pytest
 import logging
-from model.player import Player
+from model import Player
 from bot.session import Session
 from bot.common import ifNone
 from bot.telegram_interaction import MessageIds, TelegramInMessage
