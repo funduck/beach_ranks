@@ -3,7 +3,8 @@ import re
 import logging
 import sys
 from collections import namedtuple
-from .common_types import Contact, Button
+from .common_types import Button
+from model.player import Player
 
 
 logger = logging.getLogger('TelegramInteraction')
@@ -48,7 +49,7 @@ class TelegramInteraction():
             body = message['message']
             command = body['text'] if 'text' in body else None
             if 'contact' in body:
-                input = Contact(name=body['contact']['first_name'], phone=body['contact']['phone_number'])
+                input = Player(nick=body['contact']['first_name'], phone=body['contact']['phone_number'])
             ids = MessageIds(
                 user_id=body['from']['id'],
                 inline_query_id=None,
@@ -162,7 +163,7 @@ class TelegramInteraction():
                 'type': 'contact',
                 'id': str(i),
                 'phone_number': str(contacts[i].phone),
-                'first_name': contacts[i].name
+                'first_name': contacts[i].nick
             })
         r = {
             'method': 'answerInlineQuery',

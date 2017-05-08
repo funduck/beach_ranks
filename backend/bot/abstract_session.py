@@ -1,7 +1,7 @@
 import logging
 import sys
 import xworkflows
-from .common_types import Contact
+from model.player import Player
 from .telegram_interaction import TelegramInteraction, TelegramInMessage, TelegramOutMessage
 
 # used for parsing request into command with input
@@ -60,7 +60,7 @@ class AbstractSession():
         if input is None:
             return None
             
-        if type(input) == Contact:
+        if type(input) == Player:
             return input
             
         return input.split(' ')

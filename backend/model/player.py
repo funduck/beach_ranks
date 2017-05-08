@@ -19,3 +19,9 @@ class Player:
             return None
 
         return self.rating['trueskill']
+
+    def equal(self, other):
+        return self.id == other.id \
+        and self.nick == other.nick \
+        and self.user_id == other.user_id \
+        and self.phone == other.phone

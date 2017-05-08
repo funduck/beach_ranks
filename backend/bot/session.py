@@ -1,7 +1,9 @@
 import xworkflows
 import logging
 import sys
-from .common_types import Contact, Button
+from model.player import Player
+from model.game import Game
+from .common_types import Button
 from .abstract_session import AbstractSession
 from .telegram_interaction import TelegramInteraction, TelegramInMessage, TelegramOutMessage
 
@@ -70,14 +72,14 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     ''' Checks '''
     # return tuple (index of transition, parsed arguments)
     def check_adding_player(self, args, processing_message=None):
-        if type(args[0]) == Contact:
+        if type(args[0]) == Player:
             return (0, args[0])
             
         players = self.search.player(name_like=args[0])
         if len(players) == 1:
             return (0, players[0])
         else:
-            return (1, Contact(name=args[0], phone=None))
+            return (1, Player(nick=args[0], phone=None))
 
     def check_adding_players_phone(self, args, processing_message=None):
         try:
@@ -124,7 +126,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     ''' Transitions '''
     @xworkflows.transition()
     def game(self, args=None, processing_message=None):
-        self._game = self.manage.new_game()
+        self._game = Game()
         self.show_message(
             message='Adding game\n1) enter players, won team, then lost\n2) enter scores, won first',
             processing_message=processing_message
@@ -132,14 +134,11 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         
     @xworkflows.transition()
     def game_player_confirm(self, player, processing_message=None):
-        if type(player) == Contact:
-            player = self.search.player(name=player.name, phone=player.phone)
-
         self._player = player
     
     @xworkflows.transition()
-    def game_add_new_player(self, contact, processing_message=None):
-        self._player = self.manage.new_player(name=contact.name)
+    def game_add_new_player(self, player, processing_message=None):
+        self._player = player
         self.show_message(
             message='Someone new, enter his phone number',
             processing_message=processing_message
@@ -186,7 +185,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         
     @xworkflows.transition()
     def game_save(self, processing_message=None):
-        self._game.save(who=processing_message.ids.user_id)
+        self.manage.save_game(game=self._game, who=processing_message.ids.user_id)
         self.show_message(
             message='Game saved',
             processing_message=processing_message
@@ -199,7 +198,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             message='Player added',
             processing_message=processing_message
         )
-        if len(self._game.team_won) < 2 or len(self._game.team_lost) < 2:
+        if len(self._game.nicks_won) < 2 or len(self._game.nicks_lost) < 2:
             self.game_next_player(processing_message=processing_message)
         else:
             self.game_set_scores(processing_message=processing_message)
@@ -228,8 +227,8 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     
     def _add_player_to_game(self):
         g = self._game
-        if len(g.team_won) < 2:
-            g.team_won.append(self._player)
+        if len(g.nicks_won) < 2:
+            g.nicks_won.append(self._player.nick)
         else:
-            if len(g.team_lost) < 2:
-                g.team_lost.append(self._player)
+            if len(g.nicks_lost) < 2:
+                g.nicks_lost.append(self._player.nick)

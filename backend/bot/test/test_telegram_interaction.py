@@ -2,7 +2,8 @@ import pytest
 import re
 import json
 from bot.telegram_interaction import TelegramInteraction, TelegramInMessage, TelegramOutMessage
-from bot.common_types import Contact, Button
+from bot.common_types import Button
+from model.player import Player
 
 
 bot_name = 'beachranks_bot'
@@ -248,7 +249,12 @@ def test_parse_message_contact():
     
     assert r.kind == 'message'
     assert r.command is None
-    assert r.input == Contact(name=m['message']['contact']['first_name'], phone=m['message']['contact']['phone_number'])
+    assert r.input.equal(
+        Player(
+            nick=m['message']['contact']['first_name'], 
+            phone=m['message']['contact']['phone_number']
+        )
+    )
     
     
 # command with text
@@ -414,9 +420,9 @@ def test_show_contacts():
     rsp = ti.show_contacts(
         as_reply=r.ids,
         contacts=[
-            Contact(name='Jonny', phone='7123433'),
-            Contact(name='B', phone='7123431'),
-            Contact(name='Goode', phone='7123438')
+            Player(nick='Jonny', phone='7123433'),
+            Player(nick='B', phone='7123431'),
+            Player(nick='Goode', phone='7123438')
         ]
     )
     
