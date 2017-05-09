@@ -53,9 +53,10 @@ class SessionWorkflow(xworkflows.Workflow):
 class Session(AbstractSession, xworkflows.WorkflowEnabled):
     state = SessionWorkflow()
     
-    def start(self, search, manage):
+    def start(self, search, manage, text):
         self.search = search
         self.manage = manage
+        self.text = text
         
         self._game = None
         self._player = None
@@ -88,8 +89,9 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             return (0, str(phone))
         except ValueError:
             self.show_message(
-                message='Phone number is incorrect',
-                processing_message=processing_message
+                message=self.text.phone_incorrect(),
+                processing_message=processing_message,
+                reply=True
             )
             return (-1, None)
             
@@ -100,27 +102,31 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
                 if self.state.is_s_game_set_lost_score or score > 14:
                     if self.state.is_s_game_set_lost_score and score + 1 >= self._game.score_won:
                         self.show_message(
-                            message='Score of a looser +1 should be < score of a winner',
-                            processing_message=processing_message
+                            message=self.text.score_looser_less_than_winner(),
+                            processing_message=processing_message,
+                            reply=True
                         )
                         return (-1, None)
                     return (0, score)
                 else:
                     self.show_message(
-                        message='Score of a winner should be >= 15',
-                        processing_message=processing_message
+                        message=self.text.score_winner_min_value(),
+                        processing_message=processing_message,
+                        reply=True
                     )
                     return (-1, None)
             else:
                 self.show_message(
-                    message='Score should be >= 0',
-                    processing_message=processing_message
+                    message=self.text.score_min_value(),
+                    processing_message=processing_message,
+                    reply=True
                 )
                 return (-1, None)
         except ValueError:
             self.show_message(
-                message='Score is not a number',
-                processing_message=processing_message
+                message=self.text.score_is_not_a_number(),
+                processing_message=processing_message,
+                reply=True
             )
             return (-1, None)
 
@@ -129,7 +135,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     def game(self, input=None, processing_message=None):
         self._game = Game()
         self.show_message(
-            message='Adding game\n1) enter players, won team, then lost\n2) enter scores, won first',
+            message=self.text.game_add_start(),
             processing_message=processing_message
         )
         
@@ -150,7 +156,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     def game_add_new_player(self, player, processing_message=None):
         self._player = player
         self.show_message(
-            message='Someone new, enter his phone number',
+            message=self.text.player_adding_someone_new(),
             processing_message=processing_message
         )
         
@@ -162,22 +168,22 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     def game_set_score_won(self, score, processing_message=None):
         self._game.score_won = score
         self.show_message(
-            message='Ok, now score of a looser',
+            message=self.text.score_winner_set_next_looser(),
             processing_message=processing_message
         )
     
     @xworkflows.transition()
     def game_set_score_lost(self, score, processing_message=None):
         self._game.score_lost = score
-        self.show_message(
-            message='Ok, done with scores',
+        '''self.show_message(
+            message=self.text.score_set_done(),
             processing_message=processing_message
-        )
+        )'''
     
     @xworkflows.transition()
     def game_set_scores(self, arg=None, processing_message=None):
         self.show_message(
-            message='Enter score of a winner',
+            message=self.text.score_set_winner(),
             processing_message=processing_message
         )
         
@@ -189,7 +195,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     def game_save(self, processing_message=None):
         self.manage.save_game(game=self._game, who=processing_message.ids.user_id)
         self.show_message(
-            message='Game saved',
+            message=self.text.game_saved(),
             processing_message=processing_message
         )
     
@@ -197,7 +203,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     def _on_s_game_player_confirmed(self, transition_res=None, transition_arg=None, processing_message=None):
         self._add_player_to_game()
         self.show_message(
-            message='Player added',
+            message=self.text.player_added(),
             processing_message=processing_message
         )
         if len(self._game.nicks_won) < 2 or len(self._game.nicks_lost) < 2:
@@ -208,7 +214,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     @xworkflows.on_enter_state('s_game_adding_player')
     def _on_s_game_adding_player(self, transition_res=None, transition_arg=None, processing_message=None):
         self.show_message(
-            message='Enter player\'s name',
+            message=self.text.game_add_next_player(self._game),
             buttons=[Button(
                 text='search',
                 switch_inline='/find_player ',

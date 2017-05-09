@@ -30,9 +30,11 @@ class AbstractSession():
         self.responses = []
         
     # creates message via telegram_interactions and puts to resposes
-    def show_message(self, message=None, buttons=None, processing_message=None):
+    def show_message(self, message=None, buttons=None, processing_message=None, reply=False):
         if processing_message is not None:
             as_reply = processing_message.ids
+            if reply == False:
+               as_reply = as_reply._replace(message_id=None) 
         else:
             # this will lead to exception
             as_reply = None

@@ -78,11 +78,11 @@ class TelegramInteraction():
             )
 
         if kind is None:
-            print('ERROR: unknown message format', message)
+            print(f'ERROR: unknown message format {message}')
             return
 
         if command is not None:
-            logger.log(0, 'parsing command \'{command}\'')
+            logger.log(0, f'parsing command \'{command}\'')
             m = re.search(f'^(@{bot_name} |)(\/\w*|)(@{bot_name}|)(\s*)(.*)', command)
             
             if input is None and m is not None:
@@ -98,7 +98,7 @@ class TelegramInteraction():
                     if command is not None:
                         command = command.group(1)
                 
-        logger.log(0, 'command \'{command}\' input \'{input}\'')
+        logger.log(0, f'command \'{command}\' input \'{input}\'')
             
         # if something wrong, it throws exception
 
@@ -111,7 +111,7 @@ class TelegramInteraction():
 
     def show_message(self, as_reply, message=None, buttons=None):
         if as_reply.chat_id is None:
-            logger.error('Can show message only when know chat_id \'{as_reply}\'')
+            logger.error(f'Can show message only when know chat_id \'{as_reply}\'')
             return
         r = {
             'method': 'sendMessage',
@@ -155,7 +155,7 @@ class TelegramInteraction():
 
     def show_contacts(self, as_reply, contacts):
         if as_reply.inline_query_id is None:
-            logger.error('Can show contacts only on inline query \'{as_reply}\'')
+            logger.error(f'Can show contacts only on inline query \'{as_reply}\'')
             return
         c = []
         for i in range(0, len(contacts)):

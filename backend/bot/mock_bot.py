@@ -8,6 +8,7 @@ from model import Player
 from bot.session import Session
 from bot.common import ifNone
 from bot.telegram_interaction import MessageIds, TelegramInMessage, TelegramOutMessage
+from bot.texts import Texts
 
 
 def send_request(message):
@@ -23,28 +24,32 @@ l = logging.getLogger('AbstractSession')
 l.setLevel(logging.DEBUG)
 
 
+known_players = ['гриша', 'тоня', 'масик', 'олег']
+
+
 class EmptyManage():
     def save_game(self, game, who):
+        for p in game.nicks_lost:
+            known_players.append(p)
+        for p in game.nicks_won:
+            known_players.append(p)
         print(f'Game {game} saved by {who}')
 
 
 class EmptySearch():
     def player(self, name=None, phone=None, name_like=None):
-        if name == 'exists':
-            return [Player(nick=name, phone=phone)]
-        
-        if name_like == 'several':
-            return [
-                Player(nick='several1', phone='732422322'),
-                Player(nick='several2', phone='732422323'),
-                Player(nick='several3', phone='732422324')
-            ]
-        
-        return []
+        like = []
+        for n in known_players:
+            if n == name:
+                return [Player(nick=n, phone='79000000')]
+
+            if n.startswith(name_like):
+                like.append(Player(nick=n, phone='79000000'))
+        return like
 
 
 s = Session()
-s.start(search=EmptySearch(), manage=EmptyManage())
+s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts(locale='ru'))
 
 
 def get_updates(last_id=0):

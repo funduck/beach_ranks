@@ -4,6 +4,7 @@ from model import Player
 from bot.session import Session
 from bot.common import ifNone
 from bot.telegram_interaction import MessageIds, TelegramInMessage
+from bot.texts import Texts
 
 
 l = logging.getLogger('AbstractSession')
@@ -49,7 +50,7 @@ def test_init():
     
 def test_send_contact_1_known_player():
     s = Session()
-    s.start(search=EmptySearch(), manage=EmptyManage())
+    s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts())
     
     for i in (
         ('game', ''),
@@ -60,7 +61,7 @@ def test_send_contact_1_known_player():
 
 def test_send_contact_1_unknown_player():
     s = Session()
-    s.start(search=EmptySearch(), manage=EmptyManage())
+    s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts())
     
     for i in (
         ('game', ''),
@@ -71,7 +72,7 @@ def test_send_contact_1_unknown_player():
 
 def test_add_1_unknown_player():
     s = Session()
-    s.start(search=EmptySearch(), manage=EmptyManage())
+    s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts())
     
     for i in (
         ('game', ''),
@@ -83,7 +84,7 @@ def test_add_1_unknown_player():
 
 def test_add_1_known_and_1_unknown_player():
     s = Session()
-    s.start(search=EmptySearch(), manage=EmptyManage())
+    s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts())
     
     for i in (
         ('game', ''),
@@ -95,7 +96,7 @@ def test_add_1_known_and_1_unknown_player():
         
 def test_add_4_known_players_and_set_scores():
     s = Session()
-    s.start(search=EmptySearch(), manage=EmptyManage())
+    s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts())
     
     for i in (
         ('game', ''),
