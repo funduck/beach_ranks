@@ -1,39 +1,60 @@
+from datetime import datetime
 import pytest
 
-from db.db_model_game import Game
-from db.db_model_player import Rating, Player
 from db.db_manage import Manage
+from model import Player, Rating, Game
+
+from db.db_search import Search
 
 
 @pytest.mark.asyncio
 async def test_all():
-    # create players
-    players = []
-    new_ratings = {}
-    for i in range(0, 4):
-        player = await Manage.add_nick(nick=f'NewPlayer{i}', rating=Rating(value=1200, accuracy=0))
-        new_ratings[player.nick] = Rating(value=1300, accuracy=0)
-        players.append(player)
+    g = None
+    team_won = []
+    team_lost = []
+    try:
+        # create players
+        for i in range(0, 4):
+            p = Player(nick=f'NewPlayer{i}')
+            p.set_rating(Rating(value=1200, accuracy=0))
+            await Manage.save_player(p)
+            if i < 2:
+                team_won.append(p)
+            else:
+                team_lost.append(p)
 
-    g = await Manage.add_game(nicks_won=[players[0].nick, players[1].nick],
-                              nicks_lost=[players[2].nick, players[3].nick], new_ratings=new_ratings,
-                              score_won=23, score_lost=21)
+        g = Game(date=datetime.now(), nicks_won=[p.nick for p in team_won], nicks_lost=[p.nick for p in team_lost], score_won=23, score_lost=21)
+        for p in team_won:
+            g.set_rating_before(p.nick, p.get_rating())
+            p.set_rating(Rating(value=1300, accuracy=0))
+            g.set_rating_after(p.nick, p.get_rating())
 
-    test_g = Game(id=g.id)
-    await test_g.load()
+        for p in team_lost:
+            g.set_rating_before(p.nick, p.get_rating())
+            p.set_rating(Rating(value=1100, accuracy=0))
+            g.set_rating_after(p.nick, p.get_rating())
 
-    assert [p.nick for p in test_g.team_won] == ['NewPlayer0', 'NewPlayer1']
-    assert [p.nick for p in test_g.team_lost] == ['NewPlayer2', 'NewPlayer3']
+        await Manage.save_game(g)
 
-    for p in test_g.team_won:
-        assert p.get_rating('trueskill') == [1300, 0]
+        test_g = await Search.load_game_by_id(g.id)
 
-    assert test_g.score_won == 23
-    assert test_g.score_lost == 21
+        assert test_g.nicks_won == ['NewPlayer0', 'NewPlayer1']
+        assert test_g.nicks_lost == ['NewPlayer2', 'NewPlayer3']
 
-    # clear
-    await g.delete_completely()
-    for p in g.team_won:
-        await p.delete_completely()
-    for p in g.team_lost:
-        await p.delete_completely()
+        for nick in test_g.nicks_won:
+            assert test_g.rating_before(nick) == Rating(value=1200, accuracy=0)
+            assert test_g.rating_after(nick) == Rating(value=1300, accuracy=0)
+
+        for nick in test_g.nicks_lost:
+            assert test_g.rating_before(nick) == Rating(value=1200, accuracy=0)
+            assert test_g.rating_after(nick) == Rating(value=1100, accuracy=0)
+
+        assert test_g.score_won == 23
+        assert test_g.score_lost == 21
+
+    finally:
+        # clear
+        await Manage.delete_game(g)
+        for p in team_won + team_lost:
+            await Manage.delete_player(p)
+
