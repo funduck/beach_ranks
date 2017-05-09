@@ -1,7 +1,6 @@
 import datetime
 from typing import List
 
-import sys
 from model import Player, Rating, Game
 
 from .db import db
