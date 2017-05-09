@@ -100,7 +100,7 @@ class Manage:
         return [sqls, params]
 
     @staticmethod
-    def sql_save_rating(game: Game, player_id, rating_code, rating_before: Rating, rating_after: Rating, who):
+    def sql_save_game_rating(game: Game, player_id, rating_code, rating_before: Rating, rating_after: Rating, who):
         return [
             'select * from beach_ranks.save_game_rating(%s, %s, %s, %s, %s, %s, %s, %s);',
             [game.id, player_id, rating_code, rating_before.value, rating_after.value,
@@ -109,10 +109,10 @@ class Manage:
 
     @staticmethod
     async def save_player(player: Player, who='test'):
-        res = await db.execute(Manage.sql_save_player(who))
+        res = await db.execute(Manage.sql_save_player(player, who))
         player.id = res[0][0]
         if len(player.rating) > 0:
-            await db.execute(Manage.sql_save_rating(who))
+            await db.execute(Manage.sql_save_rating(player, who))
 
     @staticmethod
     async def save_game(game: Game, who='test'):
@@ -122,8 +122,8 @@ class Manage:
         players_lost = [await Search.load_player_by_nick(nick) for nick in game.nicks_lost]
         db.execute(Manage.sql_save_game_players(game, players_won, players_lost, who))
         for p in players_won + players_lost:
-            await db.execute(Manage.sql_save_rating(game, p.id, 'trueskill', game.rating_before(p.nick),
-                                                  game.rating_after(p.nick), who))
+            await db.execute(Manage.sql_save_game_rating(game, p.id, 'trueskill', game.rating_before(p.nick),
+                                                         game.rating_after(p.nick), who))
 
 
 
