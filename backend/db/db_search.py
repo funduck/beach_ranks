@@ -1,14 +1,15 @@
 import datetime
+from typing import List
 
+import sys
 from model import Player, Rating, Game
-from .db import db
 
-import asyncio
+from .db import db
 
 
 class Search:
     @staticmethod
-    def sql_find_all_games(player_id, vs_players=[], with_players=[]):
+    def sql_find_all_games(player_id, vs_players, with_players):
         sql = 'select gp.game_id from beach_ranks.game_players gp'
         params = [player_id]
         if len(vs_players) > 0:
@@ -36,19 +37,15 @@ class Search:
         ]
 
     @staticmethod
-    async def player(nick=None, phone=None):
-        p = Player(nick=nick, phone=phone)
-        await p.load()
-        return p
-
-    @staticmethod
-    async def games(self, player=None, vs_players=[], with_players=[]):
+    async def games(player: Player, vs_players: List[Player] = None, with_players: List[Player] = None):
         vs_players_ids = []
         with_players_ids = []
-        for p in vs_players:
-            vs_players_ids.append(p.id)
-        for p in with_players:
-            with_players_ids.append(p.id)
+        if vs_players is not None:
+            for p in vs_players:
+                vs_players_ids.append(p.id)
+        if with_players is not None:
+            for p in with_players:
+                with_players_ids.append(p.id)
 
         res = await db.execute(Search.sql_find_all_games(
             player_id=player.id, 
@@ -57,7 +54,7 @@ class Search:
 
         games = []
         for r in res:
-            games.append(await self.load_game_by_id(game_id=r[0]))
+            games.append(await Search.load_game_by_id(game_id=r[0]))
 
         return games
 
@@ -135,6 +132,8 @@ class Search:
         if len(res) > 0:
             p.set_rating(Rating(value=res[0][1], accuracy=res[0][2]))
 
+        return p
+
     @staticmethod
     async def load_game_by_id(game_id):
         g = Game(game_id=game_id)
@@ -160,3 +159,5 @@ class Search:
 
             g.set_rating_before(p.nick, Rating(value=res[0][0], accuracy=res[0][2]))
             g.set_rating_after(p.nick, Rating(value=res[0][1], accuracy=res[0][3]))
+
+        return g

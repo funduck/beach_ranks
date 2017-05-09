@@ -2,66 +2,78 @@ from datetime import datetime
 
 import pytest
 
-from db.db_model_game import Game
-from db.db_model_player import Player, Rating
+from db.db_manage import Manage
 from db.db_search import Search
+from model import Player, Rating, Game
 
 
 @pytest.mark.asyncio
 async def test_all():
     # create players
-    p = []
+    team_won = []
+    team_lost = []
     for i in range(0, 4):
-        p.append(Player(nick='NewPlayer'+str(i), phone='7916123456'+str(i)))
-        p[i].set_rating("trueskill", Rating(value = 1200 + i, accuracy=1))
-        await p[i].save()
+        p = Player(nick=f'NewPlayer{i}', phone=f'7916123456{i}')
+        p.set_rating(Rating(value=1200 + i, accuracy=1))
+        if i < 2:
+            team_won.append(p)
+        else:
+            team_lost.append(p)
+
+        await Manage.save_player(p)
 
     # game
-    g = Game(date=datetime.now(), team_won=[p[0], p[1]], team_lost=[p[2], p[3]], score_won=15, score_lost=10)
-    await g.save()
+    g = Game(date=datetime.now(), nicks_won=[p.nick for p in team_won], nicks_lost=[p.nick for p in team_lost],
+             score_won=15, score_lost=10)
+    for p in team_won:
+        g.set_rating_before(p.nick, p.get_rating())
+        p.set_rating(Rating(value=p.get_rating().value + 100, accuracy=p.get_rating().accuracy))
+        g.set_rating_after(p.nick, p.get_rating())
+        await Manage.save_player(p)
 
-    # ratings
-    for i in range(0, 4):
-        await g.save_rating(p[i], "trueskill", p[i].get_rating("trueskill"), Rating(value=1205 + 2 - i, accuracy=0.9))
-        p[i].set_rating("trueskill", Rating(value=1205 + 2 - i, accuracy=0.9))
-        await p[i].save()
+    for p in team_lost:
+        g.set_rating_before(p.nick, p.get_rating())
+        p.set_rating(Rating(value=p.get_rating().value - 100, accuracy=p.get_rating().accuracy))
+        g.set_rating_after(p.nick, p.get_rating())
+        await Manage.save_player(p)
+
+    await Manage.save_game(g)
 
     # find game
-    res = await Search.games(player=p[2])
+    res = await Search.games(player=team_lost[0])
     assert res[0].id == g.id
 
-    res = await Search.rating_change(g, p[0], "trueskill")
-    assert res["before"][0] == 1200
-    assert res["after"][0] == 1207
-
     # find games vs
-    res = await Search.games(player=p[2], vs_players=[p[1]])
+    res = await Search.games(player=team_won[0], vs_players=[team_lost[0]])
+    assert len(res) == 1
     assert res[0].id == g.id
 
     # not find games vs
-    res = await Search.games(player=p[2], vs_players=[p[3]])
+    res = await Search.games(player=team_lost[0], vs_players=[team_lost[1]])
     assert len(res) == 0
 
     # find games with
-    res = await Search.games(player=p[2], with_players=[p[3]])
+    res = await Search.games(player=team_lost[1], with_players=[team_lost[0]])
+    assert len(res) == 1
     assert res[0].id == g.id
 
     # not find games with
-    res = await Search.games(player=p[2], with_players=[p[0]])
+    res = await Search.games(player=team_lost[0], with_players=[team_won[1]])
     assert len(res) == 0
 
     # find games vs and with
-    res = await Search.games(player=p[2], vs_players=[p[1]], with_players=[p[3]])
+    res = await Search.games(player=team_lost[0], vs_players=[team_won[0]], with_players=[team_lost[1]])
+    assert len(res) == 1
     assert res[0].id == g.id
 
     # not find games vs
-    res = await Search.games(player=p[2], vs_players=[p[1]], with_players=[p[0]])
+    res = await Search.games(player=team_lost[1], vs_players=[team_won[1]], with_players=[team_won[0]])
     assert len(res) == 0
 
-    res = await Search.games(player=p[2], vs_players=[p[3]], with_players=[p[3]])
+    res = await Search.games(player=team_lost[0], vs_players=[team_lost[1]], with_players=[team_lost[1]])
     assert len(res) == 0
 
     # clear
-    await g.delete_completely()
-    for i in range(0, 4):
-        await p[i].delete_completely()
+    await Manage.delete_game(g)
+    for player in team_lost + team_won:
+        await Manage.delete_player(player)

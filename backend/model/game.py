@@ -22,7 +22,7 @@ class Game:
         if nick not in self.ratings:
             return None
 
-        return self.ratings[nick]['before']
+        return self.ratings[nick]['before']['trueskill']
 
     def set_rating_after(self, nick: str, rating: Rating):
         if nick not in self.nicks_won and nick not in self.nicks_lost:
@@ -35,7 +35,7 @@ class Game:
         if nick not in self.ratings:
             return None
 
-        return self.ratings[nick]['after']
+        return self.ratings[nick]['after']['trueskill']
 
     def _init_rating(self, nick):
         if nick not in self.ratings:

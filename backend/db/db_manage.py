@@ -108,6 +108,22 @@ class Manage:
         ]
 
     @staticmethod
+    def sql_delete_game(game: Game):
+        return [
+            'delete from beach_ranks.games where game_id = %s;'
+            'delete from beach_ranks.game_players where game_id = %s;'
+            'delete from beach_ranks.game_ratings where game_id = %s;', [game.id, game.id, game.id]
+        ]
+
+    @staticmethod
+    def sql_delete_player(player: Player):
+        return [
+            'delete from beach_ranks.players where player_id = %s;'
+            'delete from beach_ranks.ratings where player_id = %s;',
+            [player.id, player.id]
+        ]
+
+    @staticmethod
     async def save_player(player: Player, who='test'):
         res = await db.execute(Manage.sql_save_player(player, who))
         player.id = res[0][0]
@@ -120,10 +136,18 @@ class Manage:
         game.id = res[0][0]
         players_won = [await Search.load_player_by_nick(nick) for nick in game.nicks_won]
         players_lost = [await Search.load_player_by_nick(nick) for nick in game.nicks_lost]
-        db.execute(Manage.sql_save_game_players(game, players_won, players_lost, who))
+        await db.execute(Manage.sql_save_game_players(game, players_won, players_lost, who))
         for p in players_won + players_lost:
             await db.execute(Manage.sql_save_game_rating(game, p.id, 'trueskill', game.rating_before(p.nick),
                                                          game.rating_after(p.nick), who))
+
+    @staticmethod
+    async def delete_game(game: Game):
+        await db.execute(Manage.sql_delete_game(game))
+
+    @staticmethod
+    async def delete_player(player: Player):
+        await db.execute(Manage.sql_delete_player(player))
 
 
 
