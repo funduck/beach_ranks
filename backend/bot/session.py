@@ -72,19 +72,19 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     
     ''' Checks '''
     # return tuple (index of transition, parsed arguments)
-    def check_adding_player(self, args, processing_message=None):
-        if type(args) == Player:
-            return (0, args)
+    def check_adding_player(self, input, processing_message=None):
+        if type(input) == Player:
+            return (0, input)
         
-        players = self.search.player(name_like=args[0])
+        players = self.search.player(name_like=input)
         if len(players) == 1:
             return (0, players[0])
         else:
-            return (1, Player(nick=args[0], phone=None))
+            return (1, Player(nick=input, phone=None))
 
-    def check_adding_players_phone(self, args, processing_message=None):
+    def check_adding_players_phone(self, input, processing_message=None):
         try:
-            phone = int(self._normalize_phone(args))
+            phone = int(self._normalize_phone(input))
             return (0, str(phone))
         except ValueError:
             self.show_message(
@@ -93,9 +93,9 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             )
             return (-1, None)
             
-    def check_setting_score(self, args, processing_message=None):
+    def check_setting_score(self, input, processing_message=None):
         try:
-            score = int(args[0])
+            score = int(input)
             if score >= 0:
                 if self.state.is_s_game_set_lost_score or score > 14:
                     if self.state.is_s_game_set_lost_score and score + 1 >= self._game.score_won:
@@ -126,7 +126,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     ''' Transitions '''
     @xworkflows.transition()
-    def game(self, args=None, processing_message=None):
+    def game(self, input=None, processing_message=None):
         self._game = Game()
         self.show_message(
             message='Adding game\n1) enter players, won team, then lost\n2) enter scores, won first',
@@ -134,9 +134,9 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         )
         
     @xworkflows.transition()
-    def find_player(self, args=None, processing_message=None):
-        if args is not None and len(args[0]) > 0:
-            players = self.search.player(name_like=args[0])
+    def find_player(self, input=None, processing_message=None):
+        if input is not None and len(input) > 0:
+            players = self.search.player(name_like=input)
             self.show_contacts(
                 contacts=players, 
                 processing_message=processing_message

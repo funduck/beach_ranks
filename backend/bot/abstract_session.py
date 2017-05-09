@@ -55,16 +55,6 @@ class AbstractSession():
         
         self.responses.append(m)
     
-    @staticmethod
-    def parse_input(input):
-        if input is None:
-            return None
-            
-        if type(input) == Player:
-            return input
-            
-        return input.split(' ')
-    
     def _on_user_command(self, command, input, processing_message=None):
         if command is None:
             return False
@@ -73,9 +63,8 @@ class AbstractSession():
         except AttributeError:
             logger.error(f'transition not found: {command}')
             return False
-        args = AbstractSession.parse_input(input)
         try:
-            transition(args, processing_message)
+            transition(input, processing_message)
             return True
         except xworkflows.base.InvalidTransitionError:
             logger.warn(f'unexpected command {command} in this state {self.state.name}')
@@ -96,11 +85,9 @@ class AbstractSession():
         if check is None:
             logger.error(f'check is undefined {raw_input_transition[1]}')
             return False
-
-        args = AbstractSession.parse_input(input)
         
         # check returns tuple (index of target transition or -1 if check fails, parsed arguments)
-        c = check(args, processing_message)
+        c = check(input, processing_message)
         if c[0] >= 0:
             if type(raw_input_transition[2]) == tuple:
                 if c[0] >= len(raw_input_transition[2]):
