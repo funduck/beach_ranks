@@ -7,7 +7,7 @@ import time
 from model import Player
 from bot.session import Session
 from bot.common import ifNone
-from bot.telegram_interaction import MessageIds, TelegramInMessage, TelegramOutMessage
+from bot.telegram_interaction import TelegramInteraction, MessageIds, TelegramInMessage, TelegramOutMessage
 from bot.texts import Texts
 
 
@@ -40,17 +40,16 @@ class EmptySearch():
     def player(self, name=None, phone=None, name_like=None):
         like = []
         for n in known_players:
-            if n == name:
+            if name is not None and n == name:
                 return [Player(nick=n, phone='79000000')]
 
-            if n.startswith(name_like):
+            if name_like is not None and n.startswith(name_like):
                 like.append(Player(nick=n, phone='79000000'))
         return like
 
 
-s = Session()
-s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts(locale='ru'))
-
+telegram = TelegramInteraction()
+sessions = {}
 
 def get_updates(last_id=0):
     updates = send_request(TelegramOutMessage(body={'offset': last_id+1}, method='getUpdates'))
@@ -64,6 +63,14 @@ def get_updates(last_id=0):
 
         if last_id == 0:
             continue
+
+        m = telegram.parse_message(message=update, bot_name='beachranks_bot')
+        if m.ids.user_id in sessions:
+            s = sessions[m.ids.user_id]
+        else:
+            s = Session()
+            s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts(locale='ru'))
+            sessions[m.ids.user_id] = s
 
         res = s.process_request(update)
         for response in res:
