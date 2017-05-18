@@ -59,4 +59,4 @@ class Game:
                 'before': self.rating_before(nick),
                 'after': self.rating_after(nick)
             }
-        return f'{d}'
+        return f'Game({d})'
