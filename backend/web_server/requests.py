@@ -5,7 +5,8 @@ from collections import namedtuple
 AddNickRequest = namedtuple('AddNickRequest', ['nick', 'phone'])
 ForgetNickRequest = namedtuple('ForgetNickRequest', ['nick'])
 AddGameRequest = namedtuple('AddGameRequest', ['nicks_won', 'nicks_lost', 'score_won', 'score_lost'])
-GetListRequest = namedtuple('GetListRequest', ['nick', 'with_nicks', 'vs_nicks'])
+GamesRequest = namedtuple('GetListRequest', ['nick', 'with_nicks', 'vs_nicks'])
+PlayerRequest = namedtuple('GetPlayerRequest', ['nick'])
 
 
 def from_dict(request_type, args: typing.Dict):
@@ -33,9 +34,9 @@ def from_dict(request_type, args: typing.Dict):
                               score_won=args.get('score_won', 0),
                               score_lost=args.get('score_lost', 0))
 
-    if request_type is GetListRequest:
+    if request_type is GamesRequest:
         if 'nick' not in args:
             raise RuntimeError(f'Invalid arguments: {args}')
 
-        return GetListRequest(nick=args['nick'], with_nicks=args.get('with_nicks', None),
-                              vs_nicks=args.get('vs_nicks', None))
+        return GamesRequest(nick=args['nick'], with_nicks=args.get('with_nicks', None),
+                            vs_nicks=args.get('vs_nicks', None))

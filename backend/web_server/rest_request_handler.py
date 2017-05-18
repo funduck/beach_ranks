@@ -1,19 +1,21 @@
 import typing
 from datetime import datetime
 
+from model import Player, Game
+
+import web_server.requests as requests
 from db.db_manage import Manage
 from db.db_search import Search
-import web_server.requests as requests
-from model import Player, Game
 from ranking.ranking import TrueSkillRanking
-from web_server.requests import AddNickRequest, ForgetNickRequest, AddGameRequest, GetListRequest
+from web_server.requests import AddNickRequest, ForgetNickRequest, AddGameRequest, GamesRequest, PlayerRequest
 
 
 class RestRequestHandler:
     ranking = TrueSkillRanking
 
-    def __init__(self):
-        pass
+    def __init__(self, search=None, manage=None):
+        self._search = search if search is not None else Search()
+        self._manage = manage if manage is not None else Manage()
 
     async def handle_home(self, args: typing.Dict):
         return f'/?{args}'
@@ -23,23 +25,23 @@ class RestRequestHandler:
         if not isinstance(request, AddNickRequest):
             raise RuntimeError('Parse error')
 
-        if await Search.load_player_by_nick(request.nick) is not None:
+        if await self._search.load_player_by_nick(request.nick) is not None:
             raise RuntimeError(f'Player already exists: {request.nick}')
 
         p = Player(nick=request.nick, phone=request.phone)
         p.set_rating(self.ranking.initial_rating())
-        await Manage.save_player(p)
+        await self._manage.save_player(p)
 
     async def post_forget(self, args: typing.Dict):
         request = requests.from_dict(ForgetNickRequest, args)
         if not isinstance(request, ForgetNickRequest):
             raise RuntimeError('Parse error')
         
-        p = await Search.load_player_by_nick(request.nick)
+        p = await self._search.load_player_by_nick(request.nick)
         if p is None:
             raise RuntimeError(f'Player not found {request.nick}')
         
-        await Manage.delete_player(p)
+        await self._manage.delete_player(p)
 
     async def post_game(self, args: typing.Dict):
         request = requests.from_dict(AddGameRequest, args)
@@ -48,7 +50,7 @@ class RestRequestHandler:
 
         players = []
         for nick in request.nicks_won + request.nicks_lost:
-            player = await Search.load_player_by_nick(nick)
+            player = await self._search.load_player_by_nick(nick)
             if player is None:
                 raise RuntimeError(f'Player not found: {nick}')
             players.append(player)
@@ -56,17 +58,28 @@ class RestRequestHandler:
         game = Game(nicks_won=request.nicks_won, nicks_lost=request.nicks_lost,
                     score_won=request.score_won, score_lost=request.score_lost, date=datetime.now())
         self.ranking.calculate(game)
-        await Manage.save_game(game)
+        await self._manage.save_game(game)
         for player in players:
             player.set_rating(game.rating_after(player.nick))
-            Manage.save_player(player)
+            self._manage.save_player(player)
 
-    async def handle_list(self, args: typing.Dict):
-        request = requests.from_dict(GetListRequest, args)
-        if not isinstance(request, GetListRequest):
+    async def handle_player(self, args: typing.Dict):
+        request = requests.from_dict(PlayerRequest, args)
+        if not isinstance(request, PlayerRequest):
+            raise RuntimeError('Parse error')
+
+        player = await self._search.load_player_by_nick(request.nick)
+        if player is None:
+            raise RuntimeError(f'Player not found: {request.nick}')
+
+        return f'{player}'
+
+    async def handle_games(self, args: typing.Dict):
+        request = requests.from_dict(GamesRequest, args)
+        if not isinstance(request, GamesRequest):
             raise RuntimeError(f'Parse error')
 
-        games = await Search.games(request.nick, request.with_nick, request.vs_nick)
+        games = await self._search.games(request.nick, request.with_nick, request.vs_nick)
         return f'{games}'
 
     def handle_help(self, args: typing.Dict):

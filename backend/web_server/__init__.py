@@ -1,2 +1,2 @@
 from .web_server import WebServer
-from .request_handler import RequestHandler
+from .rest_request_handler import RestRequestHandler
