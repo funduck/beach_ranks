@@ -4,11 +4,9 @@ import logging
 
 from aiohttp import web
 
-from .request_handler import RequestHandler
-
 
 class WebServer:
-    def __init__(self, handler: RequestHandler, host=None, port=None, ssl_files=None):
+    def __init__(self, handler, host=None, port=None, ssl_files=None):
         self._handler = handler
         self._host = host
         self._port = port

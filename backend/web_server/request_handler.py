@@ -9,7 +9,7 @@ from ranking.ranking import TrueSkillRanking
 from web_server.requests import AddNickRequest, ForgetNickRequest, AddGameRequest, GetListRequest
 
 
-class RequestHandler:
+class RestRequestHandler:
     ranking = TrueSkillRanking
 
     def __init__(self):
