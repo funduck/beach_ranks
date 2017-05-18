@@ -43,3 +43,20 @@ class Game:
                 'before': {},
                 'after': {}
             }
+
+    def __repr__(self):
+        d = {
+            'team_won': {},
+            'team_lost': {}
+        }
+        for nick in self.nicks_won:
+            d['team_won'][nick] = {
+                'before': self.rating_before(nick),
+                'after': self.rating_after(nick)
+            }
+        for nick in self.nicks_lost:
+            d['team_lost'][nick] = {
+                'before': self.rating_before(nick),
+                'after': self.rating_after(nick)
+            }
+        return f'{d}'

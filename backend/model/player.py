@@ -25,3 +25,6 @@ class Player:
                and self.nick == other.nick \
                and self.user_id == other.user_id \
                and self.phone == other.phone
+
+    def __repr__(self):
+        return f'nick:{self.nick},rating:{self.get_rating()},user_id:{user_id},phone:{phone}'
