@@ -1,3 +1,4 @@
+import json
 import typing
 from datetime import datetime
 
@@ -79,8 +80,8 @@ class RestRequestHandler:
         if not isinstance(request, GamesRequest):
             raise RuntimeError(f'Parse error')
 
-        games = await self._search.games(request.nick, request.with_nick, request.vs_nick)
-        return f'{games}'
+        games = await self._search.games(request.nick, request.with_nicks, request.vs_nicks)
+        return json.dumps(games)
 
     def handle_help(self, args: typing.Dict):
         return f'/help?{args}'

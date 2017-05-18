@@ -5,15 +5,15 @@ from model import Player, Game
 
 class MockSearch:
     def __init__(self, players: typing.Dict, games: typing.List[Game]):
-        self.players = players
-        self.games = games
+        self._players = players
+        self._games = games
 
     async def load_player_by_nick(self, nick):
-        return self.players.get(nick, None)
+        return self._players.get(nick, None)
 
     async def games(self, nick, with_players=None, vs_players=None):
         games_found = []
-        for game in self.games:
+        for game in self._games:
             if nick not in game.nicks_won and nick not in game.nicks_lost:
                 continue
 

@@ -40,3 +40,11 @@ def from_dict(request_type, args: typing.Dict):
 
         return GamesRequest(nick=args['nick'], with_nicks=args.get('with_nicks', None),
                             vs_nicks=args.get('vs_nicks', None))
+
+    if request_type is PlayerRequest:
+        if 'nick' not in args:
+            raise RuntimeError(f'Invalid arguments: {args}')
+
+        return PlayerRequest(nick=args['nick'])
+
+    raise RuntimeError(f'Unknown request type: {request_type}')
