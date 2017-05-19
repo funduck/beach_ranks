@@ -28,6 +28,10 @@ async def test_get_player(storage):
     await handler.post_nick({'nick': 'test'})
     output = await handler.handle_player({'nick': 'test'})
     assert isinstance(output, str)
+    with pytest.raises(RuntimeError):
+        await handler.post_nick({})
+    with pytest.raises(RuntimeError):
+        await handler.post_nick({'nick': 'test'})
 
 
 @pytest.mark.asyncio
@@ -38,6 +42,10 @@ async def test_forget(storage):
     assert await search.load_player_by_nick('test') is not None
     await handler.post_forget({'nick': 'test'})
     assert await search.load_player_by_nick('test') is None
+    with pytest.raises(RuntimeError):
+        await handler.post_forget({'nick': 'non-existed'})
+    with pytest.raises(RuntimeError):
+        await handler.post_forget({})
 
 
 @pytest.mark.asyncio
