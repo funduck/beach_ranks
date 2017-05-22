@@ -57,12 +57,18 @@ class RestRequestHandler:
             player = await self._search.load_player_by_nick(nick)
             if player is None:
                 raise RuntimeError(f'Player not found: {nick}')
+            if player.get_rating() is None:
+                raise RuntimeError(f'Player rating is not set')
             players.append(player)
 
         game = Game(nicks_won=request.nicks_won, nicks_lost=request.nicks_lost,
                     score_won=request.score_won, score_lost=request.score_lost, date=datetime.now())
+        for player in players:
+            game.set_rating_before(player.nick, player.get_rating())
+
         self.ranking.calculate(game)
         await self._manage.save_game(game)
+
         for player in players:
             player.set_rating(game.rating_after(player.nick))
             self._manage.save_player(player)

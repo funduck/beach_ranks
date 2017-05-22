@@ -15,7 +15,7 @@ class TrueSkillRanking:
         rated_rating_groups = env.rate([team_lost, team_won], ranks=[0, 1])
         for team in rated_rating_groups:
             for nick in team:
-                game.set_rating_after(nick, team[nick])
+                game.set_rating_after(nick, cls.to_model_rating(team[nick]))
 
     @staticmethod
     def from_model_rating(rating: Rating) -> trueskill.Rating:
