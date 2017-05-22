@@ -18,7 +18,7 @@ class Game:
         self._init_rating(nick)
         self.ratings[nick]['before']['trueskill'] = rating
 
-    def rating_before(self, nick: str):
+    def rating_before(self, nick: str) -> Rating:
         if nick not in self.ratings:
             return None
 
@@ -31,7 +31,7 @@ class Game:
         self._init_rating(nick)
         self.ratings[nick]['after']['trueskill'] = rating
 
-    def rating_after(self, nick: str):
+    def rating_after(self, nick: str) -> Rating:
         if nick not in self.ratings:
             return None
 
