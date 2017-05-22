@@ -26,5 +26,13 @@ class Player:
                and self.user_id == other.user_id \
                and self.phone == other.phone
 
+    def as_dict(self):
+        return {
+            'nick': self.nick,
+            'rating': self.rating,
+            'user_id': self.user_id,
+            'phone': self.phone
+        }
+
     def __repr__(self):
-        return f'Player(nick:{self.nick},rating:{self.get_rating()},user_id:{self.user_id},phone:{self.phone})'
+        return f'Player({self.as_dict()})'

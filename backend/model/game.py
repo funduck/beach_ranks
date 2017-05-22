@@ -44,7 +44,7 @@ class Game:
                 'after': {}
             }
 
-    def __repr__(self):
+    def as_dict(self):
         d = {
             'team_won': {},
             'team_lost': {}
@@ -59,4 +59,8 @@ class Game:
                 'before': self.rating_before(nick),
                 'after': self.rating_after(nick)
             }
-        return f'Game({d})'
+
+        return d
+
+    def __repr__(self):
+        return f'Game({self.as_dict()})'
