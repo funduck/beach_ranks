@@ -4,6 +4,8 @@ import logging
 
 from aiohttp import web
 
+OK_STATUS = 'OK'
+
 
 class WebServer:
     def __init__(self, handler, host=None, port=None, ssl_files=None):
