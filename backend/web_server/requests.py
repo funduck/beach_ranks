@@ -8,6 +8,8 @@ AddGameRequest = namedtuple('AddGameRequest', ['nicks_won', 'nicks_lost', 'score
 GamesRequest = namedtuple('GetListRequest', ['nick', 'with_nicks', 'vs_nicks'])
 PlayerRequest = namedtuple('GetPlayerRequest', ['nick'])
 
+LISTS_DELIMITER = ';'
+
 
 def from_dict(request_type, args: typing.Dict):
     if request_type is AddNickRequest:
@@ -38,8 +40,9 @@ def from_dict(request_type, args: typing.Dict):
         if 'nick' not in args:
             raise RuntimeError(f'Invalid arguments: {args}')
 
-        return GamesRequest(nick=args['nick'], with_nicks=args.get('with_nicks', None),
-                            vs_nicks=args.get('vs_nicks', None))
+        with_nicks = args['with_nicks'].split(LISTS_DELIMITER) if 'with_nicks' in args else None
+        vs_nicks = args['vs_nicks'].split(LISTS_DELIMITER) if 'vs_nicks' in args else None
+        return GamesRequest(nick=args['nick'], with_nicks=with_nicks, vs_nicks=vs_nicks)
 
     if request_type is PlayerRequest:
         if 'nick' not in args:
