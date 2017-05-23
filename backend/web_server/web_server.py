@@ -54,9 +54,10 @@ class WebServer:
 
     async def _handle_wrapper(self, handler, request: web.Request):
         args = dict(zip(request.query.keys(), request.query.values()))
-        text = await handler(args)
-        if not isinstance(text, str):
-            raise TypeError(f'request handler returned invalid object {type(text)}, string expected')
+        try:
+            text = await handler(args)
+        except RuntimeError as e:
+            return web.Response(text=str(e))
 
         return web.Response(text=text)
 
