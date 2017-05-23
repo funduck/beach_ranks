@@ -2,6 +2,7 @@ import asyncio
 import re
 
 import aiopg
+import logging
 import psycopg2
 
 
@@ -29,7 +30,7 @@ class DB:
             async with conn.cursor() as cur:
                 try:
                     if show_statement:
-                        print('executing sql:', script[0], script[1], '\n')
+                        logging.debug('executing sql %s, %s', script[0], script[1])
 
                     await cur.execute(script[0], script[1])
 
@@ -40,7 +41,7 @@ class DB:
 
                     return ret
                 except psycopg2.ProgrammingError as e:
-                    print("error on script", script, "\n", e)                    
+                    logging.error('error on script: %s: %s', script, e)
                     raise DBException(str(e))
 
 
