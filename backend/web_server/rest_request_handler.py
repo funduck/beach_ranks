@@ -19,7 +19,7 @@ class RestRequestHandler:
         self._search = search if search is not None else Search()
         self._manage = manage if manage is not None else Manage()
 
-    async def handle_home(self, args: typing.Dict):
+    async def get_home(self, args: typing.Dict):
         return f'/?{args}'
 
     async def post_nick(self, args: typing.Dict):
@@ -75,7 +75,7 @@ class RestRequestHandler:
 
         return OK_STATUS
 
-    async def handle_player(self, args: typing.Dict):
+    async def get_player(self, args: typing.Dict):
         request = requests.from_dict(PlayerRequest, args)
         if not isinstance(request, PlayerRequest):
             raise RuntimeError('Parse error')
@@ -86,7 +86,7 @@ class RestRequestHandler:
 
         return json.dumps(player.as_dict())
 
-    async def handle_games(self, args: typing.Dict):
+    async def get_games(self, args: typing.Dict):
         request = requests.from_dict(GamesRequest, args)
         if not isinstance(request, GamesRequest):
             raise RuntimeError(f'Parse error')
@@ -94,5 +94,5 @@ class RestRequestHandler:
         games = await self._search.games(request.nick, request.with_nicks, request.vs_nicks)
         return json.dumps([game.as_dict() for game in games])
 
-    async def handle_help(self, args: typing.Dict):
+    async def get_help(self, args: typing.Dict):
         return f'/help?{args}'

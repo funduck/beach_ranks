@@ -12,7 +12,7 @@ class WebServer:
         self._handler = handler
         self._host = host
         self._port = port
-        self._get_prefix = 'handle_'
+        self._get_prefix = 'get_'
         self._post_prefix = 'post_'
         self._ssl_files = ssl_files
         self._app = None
@@ -31,7 +31,7 @@ class WebServer:
         web.run_app(app=self._app, host=self._host, port=self._port, ssl_context=ssl_context)
 
     def _register_handlers(self):
-        home_handler = getattr(self._handler, 'handle_home', None)
+        home_handler = getattr(self._handler, 'get_home', None)
         if home_handler is None:
             raise NotImplementedError('Given request handler is not implemented handle_home() method')
         self._app.router.add_get('/', functools.partial(self._handle_wrapper, home_handler))

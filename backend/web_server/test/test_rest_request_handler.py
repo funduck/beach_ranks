@@ -26,7 +26,7 @@ async def test_get_player(storage):
     search, manage = storage
     handler = RestRequestHandler(search, manage)
     await handler.post_nick({'nick': 'test'})
-    output = await handler.handle_player({'nick': 'test'})
+    output = await handler.get_player({'nick': 'test'})
     assert isinstance(output, str)
     with pytest.raises(RuntimeError):
         await handler.post_nick({})
@@ -60,16 +60,16 @@ async def test_post_game(storage):
                              'score_won': '15', 'score_lost': '13'})
     games = await search.games(nick='player1')
     assert len(games) == 1
-    response = await handler.handle_games({'nick': 'player1'})
+    response = await handler.get_games({'nick': 'player1'})
     games = json.loads(response)
     assert len(games) == 1
-    response = await handler.handle_games({'nick': 'player2'})
+    response = await handler.get_games({'nick': 'player2'})
     games = json.loads(response)
     assert len(games) == 1
-    response = await handler.handle_games({'nick': 'player3'})
+    response = await handler.get_games({'nick': 'player3'})
     games = json.loads(response)
     assert len(games) == 1
-    response = await handler.handle_games({'nick': 'player4'})
+    response = await handler.get_games({'nick': 'player4'})
     games = json.loads(response)
     assert len(games) == 1
 
@@ -85,33 +85,33 @@ async def test_get_games(storage):
     await handler.post_game({'w1': 'player1', 'w2': 'player2', 'l1': 'player3', 'l2': 'player4',
                              'score_won': '15', 'score_lost': '13'})
     with pytest.raises(RuntimeError):
-        await handler.handle_games({})
+        await handler.get_games({})
 
-    response = await handler.handle_games({'nick': 'player1', 'with_nicks': 'player2'})
+    response = await handler.get_games({'nick': 'player1', 'with_nicks': 'player2'})
     games = json.loads(response)
     assert len(games) == 1
 
-    response = await handler.handle_games({'nick': 'player1', 'with_nicks': 'player3'})
+    response = await handler.get_games({'nick': 'player1', 'with_nicks': 'player3'})
     games = json.loads(response)
     assert len(games) == 0
 
-    response = await handler.handle_games({'nick': 'player1', 'with_nicks': 'player4'})
+    response = await handler.get_games({'nick': 'player1', 'with_nicks': 'player4'})
     games = json.loads(response)
     assert len(games) == 0
 
-    response = await handler.handle_games({'nick': 'player1', 'vs_nicks': 'player2'})
+    response = await handler.get_games({'nick': 'player1', 'vs_nicks': 'player2'})
     games = json.loads(response)
     assert len(games) == 0
 
-    response = await handler.handle_games({'nick': 'player1', 'vs_nicks': 'player3'})
+    response = await handler.get_games({'nick': 'player1', 'vs_nicks': 'player3'})
     games = json.loads(response)
     assert len(games) == 1
 
-    response = await handler.handle_games({'nick': 'player1', 'vs_nicks': 'player4'})
+    response = await handler.get_games({'nick': 'player1', 'vs_nicks': 'player4'})
     games = json.loads(response)
     assert len(games) == 1
 
-    response = await handler.handle_games({'nick': 'player1', 'vs_nicks': 'player3;player4'})
+    response = await handler.get_games({'nick': 'player1', 'vs_nicks': 'player3;player4'})
     games = json.loads(response)
     assert len(games) == 1
 
