@@ -1,6 +1,5 @@
 import trueskill
 from trueskill import TrueSkill
-from typing import List, Tuple
 
 from model.game import Game
 from model.player import Rating
