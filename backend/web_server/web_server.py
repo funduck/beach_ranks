@@ -49,7 +49,7 @@ class WebServer:
                 method_name = attr[len(self._post_prefix):]
                 method = getattr(self._handler, attr)
                 self._app.router.add_post(f'/{method_name}',
-                                         functools.partial(self._handle_wrapper, method))
+                                          functools.partial(self._handle_wrapper, method))
                 logging.info(f'Registered web resource for POST: /{method_name}')
 
     async def _handle_wrapper(self, handler, request: web.Request):
@@ -60,8 +60,3 @@ class WebServer:
             return web.Response(text=str(e))
 
         return web.Response(text=text)
-
-
-
-
-
