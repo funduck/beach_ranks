@@ -79,7 +79,7 @@ def get_updates(last_id=0):
     return new_last_id
 
 
-def run():    
+def run():
     last_update = 0
     while True:
         last_update = get_updates(last_update)

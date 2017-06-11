@@ -9,18 +9,23 @@ OK_STATUS = 'OK'
 
 
 def respond_ok(response=None, text=None):
+    logging.info(f'responding ok {response} {text}')
+
     if response is not None:
         text = json.dumps(response)
     return web.Response(content_type='text/json', text=text, status=200)
 
 
 def respond_error(response=None, text=None):
+    logging.info(f'responding error {response} {text}')
+
     if response is not None:
         text = json.dumps(response)
     return web.Response(content_type='text/json', text=text, status=400)
 
 
 def respond_failure(response=None, text=None):
+    logging.error(f'responding failure {response} {text}')
     if response is not None:
         text = json.dumps(response)
     return web.Response(content_type='text/json', text=text, status=500)
@@ -84,7 +89,7 @@ class WebServer:
                 'error': str(e), 'error_type': 'negative response'
             })
         except Exception as e:
-            return respond_error(response={
+            return respond_failure(response={
                 'error': str(e), 'error_type': 'server failure'
             })
 

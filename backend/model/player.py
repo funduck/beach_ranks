@@ -36,3 +36,12 @@ class Player:
 
     def __repr__(self):
         return f'Player({self.as_dict()})'
+
+
+def player_from_dict(d):
+    return Player(
+        nick=d['nick'],
+        rating=d['rating'],
+        user_id=d['user_id'],
+        phone=d['phone']
+    )

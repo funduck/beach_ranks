@@ -3,7 +3,7 @@ import logging
 import sys
 from model import Player
 from model import Game
-from .common_types import Button
+from .common import Button
 from .abstract_session import AbstractSession
 from .telegram_interaction import TelegramInteraction, TelegramInMessage, TelegramOutMessage
 

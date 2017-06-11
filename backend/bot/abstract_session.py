@@ -116,7 +116,7 @@ class AbstractSession():
         else:
             logger.debug(f'check \'{raw_input_transition[1]}\' refused')
             return False
-            
+
     def process_command(self, command, input, processing_message=None):
         logger.info(f'Processing command: \'{command}\' \'{input}\'')
         
@@ -132,10 +132,10 @@ class AbstractSession():
             
     # returns array of responses, should be performed in asc order
     # usually will contain only 1 item
-    def process_request(self, r, bot_name='beachranks_bot'):
-        logger.info(f'Processing request: \'{r}\' \'{bot_name}\'')
+    def process_request(self, request, bot_name='beachranks_bot'):
+        logger.info(f'Processing request: \'{request}\' \'{bot_name}\'')
         
-        m = telegram.parse_message(message=r, bot_name=bot_name)
+        m = telegram.parse_message(message=request, bot_name=bot_name)
         
         self.process_command(command=m.command, input=m.input, processing_message=m)
         responses = self.responses
