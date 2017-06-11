@@ -12,6 +12,13 @@ from web_server.requests import AddNickRequest, ForgetNickRequest, AddGameReques
 from web_server.web_server import OK_STATUS
 
 
+def request_from_dict(request_type, args):
+    request = requests.from_dict(request_type, args)
+    if not isinstance(request, request_type):
+        raise AttributeError(f'request is not {request_type.__name__}')
+    return request
+
+
 class RestRequestHandler:
     ranking = TrueSkillRanking
 
@@ -23,9 +30,7 @@ class RestRequestHandler:
         return f'/?{args}'
 
     async def post_nick(self, args: typing.Dict):
-        request = requests.from_dict(AddNickRequest, args)
-        if not isinstance(request, AddNickRequest):
-            raise RuntimeError('Parse error')
+        request = request_from_dict(AddNickRequest, args)
 
         if await self._search.load_player_by_nick(request.nick) is not None:
             raise RuntimeError(f'Player already exists: {request.nick}')
@@ -36,21 +41,17 @@ class RestRequestHandler:
         return OK_STATUS
 
     async def post_forget(self, args: typing.Dict):
-        request = requests.from_dict(ForgetNickRequest, args)
-        if not isinstance(request, ForgetNickRequest):
-            raise RuntimeError('Parse error')
-        
+        request = request_from_dict(ForgetNickRequest, args)
+
         p = await self._search.load_player_by_nick(request.nick)
         if p is None:
             raise RuntimeError(f'Player not found {request.nick}')
-        
+
         await self._manage.delete_player(p)
         return OK_STATUS
 
     async def post_game(self, args: typing.Dict):
-        request = requests.from_dict(AddGameRequest, args)
-        if not isinstance(request, AddGameRequest):
-            raise RuntimeError('Parse error')
+        request = request_from_dict(AddGameRequest, args)
 
         players = []
         for nick in request.nicks_won + request.nicks_lost:
@@ -76,9 +77,7 @@ class RestRequestHandler:
         return OK_STATUS
 
     async def get_player(self, args: typing.Dict):
-        request = requests.from_dict(PlayerRequest, args)
-        if not isinstance(request, PlayerRequest):
-            raise RuntimeError('Parse error')
+        request = request_from_dict(PlayerRequest, args)
 
         player = await self._search.load_player_by_nick(request.nick)
         if player is None:
@@ -87,9 +86,7 @@ class RestRequestHandler:
         return json.dumps(player.as_dict())
 
     async def get_games(self, args: typing.Dict):
-        request = requests.from_dict(GamesRequest, args)
-        if not isinstance(request, GamesRequest):
-            raise RuntimeError(f'Parse error')
+        request = request_from_dict(GamesRequest, args)
 
         games = await self._search.games(request.nick, request.with_nicks, request.vs_nicks)
         return json.dumps([game.as_dict() for game in games])

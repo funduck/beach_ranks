@@ -1,10 +1,29 @@
 import functools
 import ssl
 import logging
+import json
 
 from aiohttp import web
 
 OK_STATUS = 'OK'
+
+
+def respond_ok(response=None, text=None):
+    if response is not None:
+        text = json.dumps(response)
+    return web.Response(content_type='text/json', text=text, status=200)
+
+
+def respond_error(response=None, text=None):
+    if response is not None:
+        text = json.dumps(response)
+    return web.Response(content_type='text/json', text=text, status=400)
+
+
+def respond_failure(response=None, text=None):
+    if response is not None:
+        text = json.dumps(response)
+    return web.Response(content_type='text/json', text=text, status=500)
 
 
 class WebServer:
@@ -33,7 +52,7 @@ class WebServer:
     def _register_handlers(self):
         home_handler = getattr(self._handler, 'get_home', None)
         if home_handler is None:
-            raise NotImplementedError('Given request handler is not implemented handle_home() method')
+            raise NotImplementedError('Given request handler has not implemented handle_home() method')
         self._app.router.add_get('/', functools.partial(self._handle_wrapper, home_handler))
         logging.info(f'Registered web resource for GET: /')
 
@@ -56,7 +75,17 @@ class WebServer:
         args = dict(zip(request.query.keys(), request.query.values()))
         try:
             text = await handler(args)
+        except AttributeError as e:
+            return respond_error(response={
+                'error': str(e), 'error_type': 'bad arguments'
+            })
         except RuntimeError as e:
-            return web.Response(text=str(e))
+            return respond_error(response={
+                'error': str(e), 'error_type': 'negative response'
+            })
+        except Exception as e:
+            return respond_error(response={
+                'error': str(e), 'error_type': 'server failure'
+            })
 
-        return web.Response(text=text)
+        return respond_ok(text=text)
