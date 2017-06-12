@@ -1,0 +1,35 @@
+name: beachranks
+channels:
+- defaults
+dependencies:
+- libpq=9.5.4=0
+- openssl=1.0.2k=1
+- pip=9.0.1=py36_1
+- psycopg2=2.7.1=py36_0
+- py=1.4.33=py36_0
+- pytest=3.0.7=py36_0
+- python=3.6.1=0
+- readline=6.2=2
+- requests=2.13.0=py36_0
+- setuptools=27.2.0=py36_0
+- sqlite=3.13.0=0
+- tk=8.5.18=0
+- wheel=0.29.0=py36_0
+- xz=5.2.2=1
+- zlib=1.2.8=3
+- pip:
+  - aiohttp==2.0.7
+  - aiopg==0.13.0
+  - async-timeout==1.2.0
+  - chardet==3.0.2
+  - computation-socket==0.0.0
+  - graphviz==0.7.1
+  - multidict==2.1.4
+  - objgraph==3.1.0
+  - pytest-asyncio==0.5.0
+  - six==1.10.0
+  - trueskill==0.4.4
+  - xworkflows==1.0.4
+  - yarl==0.10.0
+prefix: /Users/k1nkreet/anaconda3/envs/beachranks
+

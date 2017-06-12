@@ -1,0 +1,25 @@
+---
+- hosts: webservers
+  remote_user: admin
+  tasks:
+
+  - name: Remove old beachranks sources
+    command: rm -rf /home/admin/beachranks
+
+  - name: Checkout beachranks sources
+    git:
+      repo: https://github.com/funduck/beach_ranks.git
+      dest: /home/admin/beachranks
+
+  - name: Remove beachranks conda environment
+    command: conda remove --name beachranks --all -y
+    ignore_errors: yes
+
+  - name: Create beachranks conda environment
+    command: conda env create -f /home/admin/beachranks/ansible/beachranks_env.yml
+
+
+
+
+
+
