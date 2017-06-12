@@ -3,6 +3,10 @@
   remote_user: admin
   tasks:
 
+  - name: Stop beachranks application
+    command: daemon --name beachranks --stop
+    ignore_errors: yes
+
   - name: Remove old beachranks sources
     command: rm -rf /home/admin/beachranks
 
@@ -11,20 +15,11 @@
       repo: https://github.com/funduck/beach_ranks.git
       dest: /home/admin/beachranks
 
-  - name: Remove beachranks conda environment
-    command: /home/admin/anaconda3/bin/conda remove --name beachranks --all -y
-    ignore_errors: yes
-
-  - name: Create beachranks conda environment
-    command: /home/admin/anaconda3/bin/conda env create -f /home/admin/beachranks/ansible/beachranks_env.yml
-
-  - name: Stop beachranks application
-    command: daemon --name beachranks --stop
-    ignore_errors: yes
+  - name: Update beachranks conda environment
+    command: /home/admin/anaconda3/bin/conda env update -f /home/admin/beachranks/ansible/beachranks_env.yml
 
   - name: Start beachranks application
-    command: /home/admin/beachranks/backend/run.sh
-
+    command: bash /home/admin/beachranks/backend/run.sh
 
 
 
