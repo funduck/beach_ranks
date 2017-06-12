@@ -1,5 +1,6 @@
 import multiprocessing as mp
 import time
+import json
 
 import pytest
 import requests
@@ -22,12 +23,12 @@ def server_credentials():
 
 def send_http_get(host, port, resource='', params=None):
     r = requests.get(f'http://{host}:{port}{resource}', params=params)
-    return r.text
+    return json.loads(r.text)['result']
 
 
 def send_http_post(host, port, resource='', params=None):
     r = requests.post(f'http://{host}:{port}{resource}', params=params)
-    return r.text
+    return json.loads(r.text)['result']
 
 
 @pytest.mark.parametrize('resource,query', [
@@ -65,4 +66,3 @@ def test_post_resources(server_credentials, resource, query):
         assert str(query) == resp_query
     else:
         assert '{}' == resp_query
-

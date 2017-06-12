@@ -79,7 +79,7 @@ class WebServer:
     async def _handle_wrapper(self, handler, request: web.Request):
         args = dict(zip(request.query.keys(), request.query.values()))
         try:
-            text = await handler(args)
+            result = await handler(args)
         except AttributeError as e:
             return respond_error(response={
                 'error': str(e), 'error_type': 'bad arguments'
@@ -93,4 +93,4 @@ class WebServer:
                 'error': str(e), 'error_type': 'server failure'
             })
 
-        return respond_ok(text=text)
+        return respond_ok(response={'result': result})

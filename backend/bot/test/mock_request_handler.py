@@ -22,28 +22,34 @@ class MockRequestHandler:
     async def post_nick(self, args: typing.Dict):
         request = request_from_dict(AddNickRequest, args)
         if request.nick == 'new':
-            return json.dumps(Player(nick='new', phone=request.phone).as_dict())
+            return Player(nick='new', phone=request.phone).as_dict()
         else:
             raise RuntimeError(f'Player already exists: {request.nick}')
 
     async def post_forget(self, args: typing.Dict):
         request = request_from_dict(ForgetNickRequest, args)
-        return f'/forget?{args}'
+        return Player(nick=request.nick).as_dict()
 
     async def post_game(self, args: typing.Dict):
         request = request_from_dict(AddGameRequest, args)
         args['ratings'] = None
         args['date'] = datetime.datetime.now().isoformat(timespec='seconds')
-        return json.dumps(game_from_dict(args).as_dict())
+        return game_from_dict(args).as_dict()
 
     async def get_games(self, args: typing.Dict):
         request = request_from_dict(GamesRequest, args)
-        return f'/list?{args}'
+        return [Game(
+            nicks_won=[request.nick, request.with_nicks[0]],
+            nicks_lost=[request.vs_nicks[0], 'p9'],
+            score_won=16,
+            score_lost=14,
+            date=datetime.datetime.now()
+        ).as_dict()]
 
     async def get_player(self, args: typing.Dict):
         request = request_from_dict(PlayerRequest, args)
         if request.nick == 'exists':
-            return json.dumps(Player(nick='exist').as_dict())
+            return Player(nick='exist').as_dict()
         else:
             raise RuntimeError(f'Player not found: {request.nick}')
 

@@ -60,6 +60,12 @@ def test_add_player_ok_2(server_credentials):
     response = client.add_player(player=Player(nick='new', phone='731231213'))
     assert type(response).__name__ == 'Player'
 
+def test_forget_player(server_credentials):
+    host, port = server_credentials
+    client = RestClient('localhost', 8080)
+    response = client.forget_player(player=Player(nick='new', phone='731231213'))
+    assert type(response).__name__ == 'Player'
+
 def test_add_game_ok(server_credentials):
     host, port = server_credentials
     client = RestClient('localhost', 8080)
@@ -71,3 +77,9 @@ def test_add_game_ok_2(server_credentials):
     client = RestClient('localhost', 8080)
     response = client.add_game(game=Game(nicks_won=['p1', 'p2'], nicks_lost=['p3', 'p4'], score_won=15, score_lost=13))
     assert type(response).__name__ == 'Game'
+
+def test_get_games(server_credentials):
+    host, port = server_credentials
+    client = RestClient('localhost', 8080)
+    response = client.get_games(nick='p1', with_nicks=['p2'], vs_nicks=['p3'])
+    assert type(response[0]).__name__ == 'Game'
