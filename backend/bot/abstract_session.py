@@ -54,6 +54,7 @@ class AbstractSession():
         self.responses.append(m)
 
     def _on_user_command(self, command, input, processing_message=None):
+        logger.debug('_on_user_command')
         if command is None:
             return False
         try:
@@ -69,6 +70,7 @@ class AbstractSession():
             return False
 
     def _on_user_raw_input(self, input, processing_message=None):
+        logger.debug('_on_user_raw_input')
         raw_input_transition = None
         for rit in self.raw_input_transitions:
             if self.state.name == rit[0]:

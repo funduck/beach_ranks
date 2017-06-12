@@ -33,6 +33,9 @@ async def test_all():
         players = await Search.load_players_nick_like('New')
         assert len(players) == 4
 
+        players = await Search.load_players_nick_like('NewNotExists')
+        assert len(players) == 0
+
         # game
         g = Game(date=datetime.now(), nicks_won=[p.nick for p in team_won], nicks_lost=[p.nick for p in team_lost],
                  score_won=15, score_lost=10)

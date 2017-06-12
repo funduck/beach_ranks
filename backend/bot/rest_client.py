@@ -65,7 +65,7 @@ class RestClient():
             phone=player.phone
         response = do_request(
             url=f'{self.url}nick',
-            params={'nick': nick, 'phone': phone},
+            params={'nick': nick, 'phone': phone, 'who': who},
             method='POST'
         )
         error, response = check_response_is_error(response)
@@ -80,7 +80,7 @@ class RestClient():
             phone=player.phone
         response = do_request(
             url=f'{self.url}forget',
-            params={'nick': nick, 'phone': phone},
+            params={'nick': nick, 'phone': phone, 'who': who},
             method='POST'
         )
         error, response = check_response_is_error(response)
@@ -100,7 +100,7 @@ class RestClient():
             params={
                 'nicks_won': LISTS_DELIMITER.join(nicks_won),
                 'nicks_lost': LISTS_DELIMITER.join(nicks_lost),
-                'score_won': score_won, 'score_lost': score_lost
+                'score_won': score_won, 'score_lost': score_lost, 'who': who
             },
             method='POST'
         )

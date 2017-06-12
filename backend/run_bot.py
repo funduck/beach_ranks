@@ -3,27 +3,15 @@ import urllib.request
 import json
 import time
 
-from common import getLogger
 from bot.session import Session
 from bot.telegram_interaction import TelegramInteraction, TelegramOutMessage
 from bot.rest_client import RestClient
 from bot.texts import Texts
 
-l = getLogger('DB')
-l.setLevel(logging.DEBUG)
-
-l = getLogger('Bot')
-l.setLevel(logging.DEBUG)
-
-l = getLogger('BotSession')
-l.setLevel(logging.DEBUG)
-
-logger = getLogger('TelegramInteraction')
-l.setLevel(logging.DEBUG)
-
-l = getLogger('BotRestClient')
-l.setLevel(logging.DEBUG)
-
+logging.getLogger('Bot').setLevel(logging.DEBUG)
+logging.getLogger('BotSession').setLevel(logging.DEBUG)
+logging.getLogger('TelegramInteraction').setLevel(logging.DEBUG)
+logging.getLogger('BotRestClient').setLevel(logging.DEBUG)
 
 def send_request(message):
     if message is None:

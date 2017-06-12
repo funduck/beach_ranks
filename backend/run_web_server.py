@@ -3,6 +3,10 @@ from optparse import OptionParser
 import logging
 
 logging.getLogger('RestRequestHandler').setLevel(logging.DEBUG)
+logging.getLogger('DB').setLevel(logging.DEBUG)
+logging.getLogger('DBSearch').setLevel(logging.DEBUG)
+logging.getLogger('DBManage').setLevel(logging.DEBUG)
+
 
 parser = OptionParser()
 parser.add_option('-H', '--host', dest='host', help='host for web-server (0.0.0.0 by default)')

@@ -57,7 +57,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         self._game = None
         self._player = None
 
-    # A list of transitions and checks performed on an input without command
+    # A list of transitions and checks performed on an user_input without command
     # check returns tuple (index of transition, parsed args)
     # (source state, check, transitions)
     raw_input_transitions = (
@@ -73,20 +73,22 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     ''' Checks '''
     # return tuple (index of transition, parsed arguments)
-    def check_adding_player(self, input, processing_message=None):
-        if type(input) == Player:
-            return (0, input)
+    def check_adding_player(self, user_input, processing_message=None):
+        logger.debug('check_adding_player')
+        if type(user_input) == Player:
+            return (0, user_input)
 
-        err, player = self.backend.get_player(nick=input)
+        err, player = self.backend.get_player(nick=user_input)
         self._check_error_is_fatal(err)
         if player is not None:
             return (0, player)
         else:
-            return (1, Player(nick=input, phone=None))
+            return (1, Player(nick=user_input, phone=None))
 
-    def check_adding_players_phone(self, input, processing_message=None):
+    def check_adding_players_phone(self, user_input, processing_message=None):
+        logger.debug('check_adding_players_phone')
         try:
-            phone = int(self._normalize_phone(input))
+            phone = int(self._normalize_phone(user_input))
             return (0, str(phone))
         except ValueError:
             self.show_message(
@@ -96,9 +98,10 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             )
             return (-1, None)
 
-    def check_setting_score(self, input, processing_message=None):
+    def check_setting_score(self, user_input, processing_message=None):
+        logger.debug('check_setting_score')
         try:
-            score = int(input)
+            score = int(user_input)
             if score >= 0:
                 if self.state.is_s_game_set_lost_score or score > 14:
                     if self.state.is_s_game_set_lost_score and score + 1 >= self._game.score_won:
@@ -133,7 +136,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     ''' Transitions '''
     @xworkflows.transition()
-    def game(self, input=None, processing_message=None):
+    def game(self, user_input=None, processing_message=None):
         logger.debug('game')
         self._game = Game()
         self.show_message(
@@ -142,10 +145,10 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         )
 
     @xworkflows.transition()
-    def find_player(self, input=None, processing_message=None):
+    def find_player(self, user_input=None, processing_message=None):
         logger.debug('find_player')
-        if input is not None and len(input) > 1:
-            err, players = self.backend.get_players(nick_like=input)
+        if user_input is not None and len(user_input) > 1:
+            err, players = self.backend.get_players(nick_like=user_input)
             self._check_error_is_fatal(err)
             self.show_contacts(
                 contacts=players,
@@ -170,6 +173,8 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     def game_new_player_phone(self, phone, processing_message=None):
         logger.debug('game_new_player_phone')
         self._player.phone = self._normalize_phone(phone)
+        err, self._player = self.backend.add_player(player=self._player, who=processing_message.ids.user_id)
+        self._check_error_is_fatal(err)
 
     @xworkflows.transition()
     def game_set_score_won(self, score, processing_message=None):

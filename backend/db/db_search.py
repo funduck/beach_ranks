@@ -8,6 +8,7 @@ from .db import db
 
 
 logger = initLogger('DBSearch')
+ratingSystem = 'trueskill'
 
 
 class Search:
@@ -59,16 +60,19 @@ class Search:
         for r in res:
             games.append(await Search.load_game_by_id(game_id=r[0]))
 
+        logger.debug(f'games {games}')
         return games
 
     @staticmethod
     async def rating_change(game, player, rating_code):
         res = await db.execute(Search.sql_rating_change(game.id, player.id, rating_code))
         res = res[0]
-        return {
+        rating_change = {
             "before": [res[0], res[2]],
             "after": [res[1], res[3]]
         }
+        logger.debug(f'rating_change {rating_change}')
+        return rating_change
 
     @staticmethod
     def sql_ratings(player_id):
@@ -95,7 +99,7 @@ class Search:
     @staticmethod
     def sql_load_players_nick_like(nick):
         return [
-            'select player_id, nick, phone from beach_ranks.players where nick LIKE %s',
+            'select player_id, nick, phone from beach_ranks.players where UPPER(nick) LIKE UPPER(%s)',
             [f'{nick}%']
         ]
 
@@ -118,6 +122,7 @@ class Search:
     async def load_player_by_nick(nick):
         res = await db.execute(Search.sql_load_player_by_nick(nick))
         if len(res) == 0:
+            logger.debug('load_player_by_nick None')
             return None
 
         player_id, nick, phone = res[0]
@@ -127,12 +132,14 @@ class Search:
         if len(res) > 0:
             p.set_rating(Rating(value=res[0][1], accuracy=res[0][2]))
 
+        logger.debug(f'load_player_by_nick {p}')
         return p
 
     @staticmethod
     async def load_player_by_id(player_id):
         res = await db.execute(Search.sql_load_player_by_id(player_id))
         if len(res) == 0:
+            logger.debug('load_player_by_nick None')
             return None
 
         player_id, nick, phone = res[0]
@@ -142,13 +149,12 @@ class Search:
         if len(res) > 0:
             p.set_rating(Rating(value=res[0][1], accuracy=res[0][2]))
 
+        logger.debug(f'load_player_by_id {p}')
         return p
 
     @staticmethod
     async def load_players_nick_like(nick):
         res = await db.execute(Search.sql_load_players_nick_like(nick))
-        if len(res) == 0:
-            return None
 
         players = []
         for record in res:
@@ -160,13 +166,17 @@ class Search:
                 p.set_rating(Rating(value=res[0][1], accuracy=res[0][2]))
 
             players.append(p)
-            
+
+        logger.debug(f'load_players_nick_like {players}')
         return players
 
     @staticmethod
     async def load_game_by_id(game_id):
         g = Game(game_id=game_id)
         res = await db.execute(Search.sql_load_game_by_id(game_id))
+        if len(res) == 0:
+            raise RuntimeError(f'Could not find game game_id({g.id})')
+
         res = res[0]
         g.date = datetime.datetime.strptime(res[0], '%Y-%m-%d %H:%M:%S')
         g.score_won = res[1]
@@ -182,11 +192,12 @@ class Search:
             else:
                 g.nicks_lost.append(p.nick)
 
-            res = await db.execute(Search.sql_rating_change(g.id, p.id, 'trueskill'))
+            res = await db.execute(Search.sql_rating_change(g.id, p.id, ratingSystem))
             if len(res) == 0:
                 raise RuntimeError(f'Could not find rating change for game_id({g.id}), player_id({p.id})')
 
             g.set_rating_before(p.nick, Rating(value=res[0][0], accuracy=res[0][2]))
             g.set_rating_after(p.nick, Rating(value=res[0][1], accuracy=res[0][3]))
 
+        logger.debug(f'load_game_by_id {g}')
         return g

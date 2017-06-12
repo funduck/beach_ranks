@@ -21,6 +21,9 @@ class EmptyBackend():
     def add_game(self, game, who):
         return None, game
 
+    def add_player(self, player, who):
+        return None, player
+
     def get_player(self, nick=None, phone=None):
         if nick == 'exists':
             return None, Player(nick, phone)
