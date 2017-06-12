@@ -1,13 +1,12 @@
-import multiprocessing as mp
+import os
+import subprocess
 import time
 import json
 import logging
 
 import pytest
 import requests
-from web_server import WebServer
-
-from web_server.test.mock_request_handler import MockRequestHandler
+import sys
 
 
 logging.getLogger('WebServer').setLevel(logging.ERROR)
@@ -16,13 +15,13 @@ logging.getLogger('WebServer').setLevel(logging.ERROR)
 @pytest.yield_fixture(scope='module')
 def server_credentials():
     host, port = 'localhost', 9999
-    server = WebServer(MockRequestHandler(), host=host, port=port)
-    server_process = mp.Process(target=server.run)
-    server_process.start()
+    path = os.path.dirname(os.path.abspath(__file__))
+    env = os.environ.copy()
+    p = subprocess.Popen([sys.executable, f'{path}/run_mock_web_server.py'], env=env)
     time.sleep(1)
     yield (host, port)
-    server_process.terminate()
-    server_process.join()
+    p.kill()
+    p.wait()
 
 
 def send_http_get(host, port, resource='', params=None):
