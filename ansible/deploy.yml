@@ -18,6 +18,9 @@
   - name: Update beachranks conda environment
     command: /home/admin/anaconda3/bin/conda env update -f /home/admin/beachranks/ansible/beachranks_env.yml
 
+  - name: Run beachranks tests
+    command: bash /home/admin/beachranks/run_tests.sh
+
   - name: Start beachranks application
     command: bash /home/admin/beachranks/backend/run.sh
 
