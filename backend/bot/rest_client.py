@@ -21,9 +21,11 @@ def do_request(url, params, method):
     try:
         logger.debug(f'request {method} {url} {params}')
         if method == 'GET':
-            return json.loads(requests.get(url=url, params=params).text)
+            text = requests.get(url=url, params=params).text
         if method == 'POST':
-            return json.loads(requests.post(url=url, params=params).text)
+            text = requests.post(url=url, params=params).text
+        logger.debug(f'response {text}')
+        return json.loads(text)
     except Exception as e:
         logger.error(f'do_request {params} {method} error: {e}')
         return {'error': str(e), 'error_type': 'client'}

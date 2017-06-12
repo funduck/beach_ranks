@@ -86,7 +86,7 @@ class Search:
     def sql_load_player_by_nick(nick):
         return [
             'select player_id, nick, phone from beach_ranks.players where UPPER(nick) = UPPER(%s)',
-            [nick]
+            [nick.strip()]
         ]
 
     @staticmethod
@@ -100,7 +100,7 @@ class Search:
     def sql_load_players_nick_like(nick):
         return [
             'select player_id, nick, phone from beach_ranks.players where UPPER(nick) LIKE UPPER(%s)',
-            [f'{nick}%']
+            [f'{nick.strip()}%']
         ]
 
     @staticmethod

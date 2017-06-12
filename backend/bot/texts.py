@@ -115,3 +115,21 @@ class Texts():
 			return 'Player added'
 		if self.locale == 'ru':
 			return 'Игрок добавлен'
+
+	def players(self):
+		if self.locale == 'en':
+			return 'Who are we looking for?'
+		if self.locale == 'ru':
+			return 'Напиши, кого мы ищем'
+
+	def players_found(self, player):
+		if self.locale == 'en':
+			return f'{player.nick} {player.get_rating()}'
+		if self.locale == 'ru':
+			return f'{player.nick} {player.get_rating()}'
+
+	def players_not_found(self):
+		if self.locale == 'en':
+			return 'Couldn\'t find anyone'
+		if self.locale == 'ru':
+			return 'Никого не нашлось'

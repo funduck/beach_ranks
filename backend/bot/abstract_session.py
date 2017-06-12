@@ -53,7 +53,7 @@ class AbstractSession():
 
         self.responses.append(m)
 
-    def _on_user_command(self, command, input, processing_message=None):
+    def _on_user_command(self, command, user_input, processing_message=None):
         logger.debug('_on_user_command')
         if command is None:
             return False
@@ -63,13 +63,13 @@ class AbstractSession():
             logger.error(f'transition not found: {command}')
             return False
         try:
-            transition(input, processing_message)
+            transition(user_input, processing_message)
             return True
         except xworkflows.base.InvalidTransitionError:
             logger.warn(f'unexpected command {command} in this state {self.state.name}')
             return False
 
-    def _on_user_raw_input(self, input, processing_message=None):
+    def _on_user_raw_input(self, user_input, processing_message=None):
         logger.debug('_on_user_raw_input')
         raw_input_transition = None
         for rit in self.raw_input_transitions:
@@ -87,7 +87,8 @@ class AbstractSession():
             return False
 
         # check returns tuple (index of target transition or -1 if check fails, parsed arguments)
-        c = check(input, processing_message)
+        c = check(user_input, processing_message)
+        logger.debug(f'{raw_input_transition[1]} returns: {c[0]} {c[1]}')
         if c[0] >= 0:
             if type(raw_input_transition[2]) == tuple:
                 if c[0] >= len(raw_input_transition[2]):
@@ -115,16 +116,16 @@ class AbstractSession():
             logger.debug(f'check \'{raw_input_transition[1]}\' refused')
             return False
 
-    def process_command(self, command, input, processing_message=None):
-        logger.info(f'Processing command: \'{command}\' \'{input}\'')
+    def process_command(self, command, user_input, processing_message=None):
+        logger.info(f'Processing command: \'{command}\' \'{user_input}\'')
 
         if command is not None and len(command) > 0:
-            response = self._on_user_command(command, input, processing_message)
+            response = self._on_user_command(command, user_input, processing_message)
         else:
-            response = self._on_user_raw_input(input, processing_message)
+            response = self._on_user_raw_input(user_input, processing_message)
 
         if not response:
-            logger.info(f'Refused to process command: \'{command}\' input: \'{input}\'')
+            logger.info(f'Refused to process command: \'{command}\' user_input: \'{user_input}\'')
 
         return response
 
@@ -135,7 +136,7 @@ class AbstractSession():
 
         m = telegram.parse_message(message=request, bot_name=bot_name)
 
-        self.process_command(command=m.command, input=m.input, processing_message=m)
+        self.process_command(command=m.command, user_input=m.input, processing_message=m)
         responses = self.responses
         self.responses = []
         return responses
