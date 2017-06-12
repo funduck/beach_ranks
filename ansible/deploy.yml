@@ -8,7 +8,9 @@
     ignore_errors: yes
 
   - name: Remove old beachranks sources
-    command: rm -rf /home/admin/beachranks
+    file:
+      state: absent
+      path: "/home/admin/beachranks"
 
   - name: Checkout beachranks sources
     git:
