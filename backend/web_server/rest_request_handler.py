@@ -38,7 +38,7 @@ class RestRequestHandler:
         p = Player(nick=request.nick, phone=request.phone)
         p.set_rating(self.ranking.initial_rating())
         await self._manage.save_player(p)
-        return OK_STATUS
+        return json.dumps(p.as_dict())
 
     async def post_forget(self, args: typing.Dict):
         request = request_from_dict(ForgetNickRequest, args)
@@ -74,7 +74,13 @@ class RestRequestHandler:
             player.set_rating(game.rating_after(player.nick))
             self._manage.save_player(player)
 
-        return OK_STATUS
+        return json.dumps(game.as_dict())
+
+    async def get_games(self, args: typing.Dict):
+        request = request_from_dict(GamesRequest, args)
+
+        games = await self._search.games(request.nick, request.with_nicks, request.vs_nicks)
+        return json.dumps([game.as_dict() for game in games])
 
     async def get_player(self, args: typing.Dict):
         request = request_from_dict(PlayerRequest, args)
@@ -84,12 +90,6 @@ class RestRequestHandler:
             raise RuntimeError(f'Player not found: {request.nick}')
 
         return json.dumps(player.as_dict())
-
-    async def get_games(self, args: typing.Dict):
-        request = request_from_dict(GamesRequest, args)
-
-        games = await self._search.games(request.nick, request.with_nicks, request.vs_nicks)
-        return json.dumps([game.as_dict() for game in games])
 
     async def get_help(self, args: typing.Dict):
         return f'/help?{args}'

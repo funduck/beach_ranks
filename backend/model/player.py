@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 Rating = namedtuple('Rating', ['value', 'accuracy'])
-
+ratingSystem = 'trueskill'
 
 class Player:
     def __init__(self, player_id=0, nick=None, rating=None, user_id=None, phone=None):
@@ -12,13 +12,13 @@ class Player:
         self.phone = phone
 
     def set_rating(self, rating: Rating):
-        self.rating['trueskill'] = rating
+        self.rating[ratingSystem] = rating
 
     def get_rating(self):
-        if 'trueskill' not in self.rating:
+        if ratingSystem not in self.rating:
             return None
 
-        return self.rating['trueskill']
+        return self.rating[ratingSystem]
 
     def equal(self, other):
         return self.id == other.id \

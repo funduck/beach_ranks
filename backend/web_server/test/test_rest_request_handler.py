@@ -28,7 +28,7 @@ async def test_get_player(storage):
     await handler.post_nick({'nick': 'test'})
     output = await handler.get_player({'nick': 'test'})
     assert isinstance(output, str)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(AttributeError):
         await handler.post_nick({})
     with pytest.raises(RuntimeError):
         await handler.post_nick({'nick': 'test'})
@@ -44,7 +44,7 @@ async def test_forget(storage):
     assert await search.load_player_by_nick('test') is None
     with pytest.raises(RuntimeError):
         await handler.post_forget({'nick': 'non-existed'})
-    with pytest.raises(RuntimeError):
+    with pytest.raises(AttributeError):
         await handler.post_forget({})
 
 
@@ -56,7 +56,7 @@ async def test_post_game(storage):
     await handler.post_nick({'nick': 'player2'})
     await handler.post_nick({'nick': 'player3'})
     await handler.post_nick({'nick': 'player4'})
-    await handler.post_game({'w1': 'player1', 'w2': 'player2', 'l1': 'player3', 'l2': 'player4',
+    await handler.post_game({'nicks_won': 'player1;player2', 'nicks_lost': 'player3;player4',
                              'score_won': '15', 'score_lost': '13'})
     games = await search.games(nick='player1')
     assert len(games) == 1
@@ -82,9 +82,9 @@ async def test_get_games(storage):
     await handler.post_nick({'nick': 'player2'})
     await handler.post_nick({'nick': 'player3'})
     await handler.post_nick({'nick': 'player4'})
-    await handler.post_game({'w1': 'player1', 'w2': 'player2', 'l1': 'player3', 'l2': 'player4',
+    await handler.post_game({'nicks_won': 'player1;player2', 'nicks_lost': 'player3;player4',
                              'score_won': '15', 'score_lost': '13'})
-    with pytest.raises(RuntimeError):
+    with pytest.raises(AttributeError):
         await handler.get_games({})
 
     response = await handler.get_games({'nick': 'player1', 'with_nicks': 'player2'})
@@ -114,13 +114,3 @@ async def test_get_games(storage):
     response = await handler.get_games({'nick': 'player1', 'vs_nicks': 'player3;player4'})
     games = json.loads(response)
     assert len(games) == 1
-
-
-
-
-
-
-
-
-
-
