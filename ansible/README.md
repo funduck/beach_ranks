@@ -31,7 +31,7 @@ This will make those steps
 ## Change conda environment
 To change beachranks conda environment you should edit **beachranks_env.yml** file, and run deploy script.
 
-## Actions will **not** provided by our deploy scripts yet
+## Actions which is not provided by our deploy scripts yet
 * Install anaconda
 * Install postgres
 * Update database
