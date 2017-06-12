@@ -19,11 +19,11 @@
     command: /home/admin/anaconda3/bin/conda env create -f /home/admin/beachranks/ansible/beachranks_env.yml
 
   - name: Stop beachranks application
-    command: pkill run_web_server.py
+    command: daemon --name beachranks --stop
     ignore_errors: yes
 
   - name: Start beachranks application
-    command: sh /home/admin/beachranks/backend/run.sh
+    command: /home/admin/beachranks/backend/run.sh
 
 
 
