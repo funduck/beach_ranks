@@ -23,7 +23,8 @@
     ignore_errors: yes
 
   - name: Start beachranks application
-    command: source activate beachranks && PYTHONPATH=/home/admin/beachranks/backend/ python /home/admin/beachranks/backend/run_web_server.py
+    command: sh /home/admin/beachranks/backend/run.sh
+
 
 
 
