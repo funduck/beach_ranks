@@ -3,19 +3,11 @@ from datetime import datetime
 
 from model import Player, Game
 
-import web_server.requests as requests
 from db.db_manage import Manage
 from db.db_search import Search
 from ranking.ranking import TrueSkillRanking
-from web_server.requests import AddNickRequest, ForgetNickRequest, AddGameRequest, GamesRequest, PlayerRequest
+from valid_requests import AddNickRequest, ForgetNickRequest, AddGameRequest, GamesRequest, PlayerRequest, PlayersRequest, valid_request_from_dict
 from web_server.web_server import OK_STATUS
-
-
-def request_from_dict(request_type, args):
-    request = requests.from_dict(request_type, args)
-    if not isinstance(request, request_type):
-        raise AttributeError(f'request is not {request_type.__name__}')
-    return request
 
 
 class RestRequestHandler:
@@ -29,7 +21,7 @@ class RestRequestHandler:
         return f'/?{args}'
 
     async def post_nick(self, args: typing.Dict):
-        request = request_from_dict(AddNickRequest, args)
+        request = valid_request_from_dict(AddNickRequest, args)
 
         if await self._search.load_player_by_nick(request.nick) is not None:
             raise RuntimeError(f'Player already exists: {request.nick}')
@@ -40,7 +32,7 @@ class RestRequestHandler:
         return p.as_dict()
 
     async def post_forget(self, args: typing.Dict):
-        request = request_from_dict(ForgetNickRequest, args)
+        request = valid_request_from_dict(ForgetNickRequest, args)
 
         p = await self._search.load_player_by_nick(request.nick)
         if p is None:
@@ -50,7 +42,7 @@ class RestRequestHandler:
         return p.as_dict()
 
     async def post_game(self, args: typing.Dict):
-        request = request_from_dict(AddGameRequest, args)
+        request = valid_request_from_dict(AddGameRequest, args)
 
         players = []
         for nick in request.nicks_won + request.nicks_lost:
@@ -71,24 +63,30 @@ class RestRequestHandler:
 
         for player in players:
             player.set_rating(game.rating_after(player.nick))
-            self._manage.save_player(player)
+            await self._manage.save_player(player)
 
         return game.as_dict()
 
     async def get_games(self, args: typing.Dict):
-        request = request_from_dict(GamesRequest, args)
+        request = valid_request_from_dict(GamesRequest, args)
 
         games = await self._search.games(request.nick, request.with_nicks, request.vs_nicks)
         return [game.as_dict() for game in games]
 
     async def get_player(self, args: typing.Dict):
-        request = request_from_dict(PlayerRequest, args)
+        request = valid_request_from_dict(PlayerRequest, args)
 
         player = await self._search.load_player_by_nick(request.nick)
         if player is None:
             raise RuntimeError(f'Player not found: {request.nick}')
 
         return player.as_dict()
+
+    async def get_players(self, args: typing.Dict):
+        request = valid_request_from_dict(PlayersRequest, args)
+
+        players = await self._search.load_players_nick_like(request.nick_like)
+        return [player.as_dict() for player in players]
 
     async def get_help(self, args: typing.Dict):
         return f'/help?{args}'

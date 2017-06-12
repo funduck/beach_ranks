@@ -1,12 +1,16 @@
 import multiprocessing as mp
 import time
 import json
+import logging
 
 import pytest
 import requests
 from web_server import WebServer
 
 from web_server.test.mock_request_handler import MockRequestHandler
+
+
+logging.getLogger('WebServer').setLevel(logging.ERROR)
 
 
 @pytest.yield_fixture(scope='module')

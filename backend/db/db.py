@@ -2,12 +2,12 @@ import asyncio
 import re
 
 import aiopg
-import logging
 import psycopg2
 
+from common import initLogger
 
-class DBException(Exception):
-    pass
+
+logger = initLogger('DB')
 
 
 class DB:
@@ -16,21 +16,20 @@ class DB:
         self.do_fetch_regexp = re.compile("^(SELECT|select)")
         self.conn_pool = None
         self.event_loop_id = None
-        
+
     async def connect(self):
         self.conn_pool = await aiopg.create_pool(self.dsn)
         self.event_loop_id = id(asyncio.get_event_loop())
-        
+
     # script is list: [sql, list_of_params]
-    async def execute(self, script, show_statement=True):
+    async def execute(self, script):
         if self.conn_pool is None or self.conn_pool.closed or self.event_loop_id != id(asyncio.get_event_loop()):
             await self.connect()
-        
+
         async with self.conn_pool.acquire() as conn:
             async with conn.cursor() as cur:
                 try:
-                    if show_statement:
-                        logging.debug('executing sql %s, %s', script[0], script[1])
+                    logger.debug('executing sql %s, %s', script[0], script[1])
 
                     await cur.execute(script[0], script[1])
 
@@ -41,8 +40,8 @@ class DB:
 
                     return ret
                 except psycopg2.ProgrammingError as e:
-                    logging.error('error on script: %s: %s', script, e)
-                    raise DBException(str(e))
+                    logger.error('error on script: %s: %s', script, e)
+                    raise RuntimeError('error on executing statement')
 
 
 db = DB()

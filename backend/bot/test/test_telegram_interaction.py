@@ -1,9 +1,15 @@
 import pytest
 import re
 import json
+import logging
+
+from common import getLogger
 from bot.telegram_interaction import TelegramInteraction, TelegramInMessage, TelegramOutMessage
-from bot.common_types import Button
+from bot.types import Button
 from model import Player
+
+
+getLogger('TelegramInteraction').setLevel(logging.ERROR)
 
 
 bot_name = 'beachranks_bot'
@@ -210,13 +216,13 @@ callback_query = {
 # just command
 def test_parse_message_command():
     m = message_command
-    
+
     r = TelegramInteraction.parse_message(message=m, bot_name=bot_name)
     assert r.ids.user_id == m['message']['from']['id']
     assert r.ids.message_id == m['message']['message_id']
     assert r.ids.inline_query_id is None
     assert r.ids.chat_id == m['message']['chat']['id']
-    
+
     assert r.kind == 'message'
     assert r.command == m['message']['text'][1:]
     assert r.input is None
@@ -225,48 +231,48 @@ def test_parse_message_command():
 # just text
 def test_parse_message_text():
     m = message_text
-    
+
     r = TelegramInteraction.parse_message(message=m, bot_name=bot_name)
     assert r.ids.user_id == m['message']['from']['id']
     assert r.ids.message_id == m['message']['message_id']
     assert r.ids.inline_query_id is None
     assert r.ids.chat_id == m['message']['chat']['id']
-    
+
     assert r.kind == 'message'
     assert r.command is None
     assert r.input == m['message']['text']
-    
+
 
 # contact
 def test_parse_message_contact():
     m = message_contact
-    
+
     r = TelegramInteraction.parse_message(message=m, bot_name=bot_name)
     assert r.ids.user_id == m['message']['from']['id']
     assert r.ids.message_id == m['message']['message_id']
     assert r.ids.inline_query_id is None
     assert r.ids.chat_id == m['message']['chat']['id']
-    
+
     assert r.kind == 'message'
     assert r.command is None
     assert r.input.equal(
         Player(
-            nick=m['message']['contact']['first_name'], 
+            nick=m['message']['contact']['first_name'],
             phone=m['message']['contact']['phone_number']
         )
     )
-    
-    
+
+
 # command with text
 def test_parse_message_command_with_text():
     m = message_command_with_text
-    
+
     r = TelegramInteraction.parse_message(message=m, bot_name=bot_name)
     assert r.ids.user_id == m['message']['from']['id']
     assert r.ids.message_id == m['message']['message_id']
     assert r.ids.inline_query_id is None
     assert r.ids.chat_id == m['message']['chat']['id']
-    
+
     assert r.kind == 'message'
     assert r.command == re.search('(\/\w*) (.*)', m['message']['text']).group(1)[1:]
     assert r.input == re.search('(\/\w*) (.*)', m['message']['text']).group(2)
@@ -275,58 +281,58 @@ def test_parse_message_command_with_text():
 # inline text
 def test_parse_inline_query_text():
     m = inline_query_text
-    
+
     r = TelegramInteraction.parse_message(message=m, bot_name=bot_name)
     assert r.ids.user_id == m['inline_query']['from']['id']
     assert r.ids.message_id is None
     assert r.ids.inline_query_id == m['inline_query']['id']
     assert r.ids.chat_id is None
-    
+
     assert r.kind == 'inline_query'
     assert r.command is None
     assert r.input == m['inline_query']['query']
-    
+
 
 # inline command with text
 def test_parse_inline_query_command_with_text():
     m = inline_query_command_with_text
-    
+
     r = TelegramInteraction.parse_message(message=m, bot_name=bot_name)
     assert r.ids.user_id == m['inline_query']['from']['id']
     assert r.ids.message_id is None
     assert r.ids.inline_query_id == m['inline_query']['id']
     assert r.ids.chat_id is None
-    
+
     assert r.kind == 'inline_query'
     assert r.command == re.search('(\/\w*) (.*)', m['inline_query']['query']).group(1)[1:]
     assert r.input == re.search('(\/\w*) (.*)', m['inline_query']['query']).group(2)
-    
+
 
 # callback query with data like '/cmd some text after' should be treated like regular message
 def test_parse_callback_query():
     m = callback_query
-    
+
     r = TelegramInteraction.parse_message(message=m, bot_name=bot_name)
     assert r.ids.user_id == m['callback_query']['from']['id']
     assert r.ids.message_id is None # because here it would be bot's message
     assert r.ids.inline_query_id is None
     assert r.ids.chat_id == m['callback_query']['message']['chat']['id']
-    
+
     assert r.kind == 'callback_query'
     assert r.command == re.search('(\/\w*) (.*)', m['callback_query']['data']).group(1)[1:]
     assert r.input == re.search('(\/\w*) (.*)', m['callback_query']['data']).group(2)
-  
-  
+
+
 # simple message reply to message
 def test_show_message_as_repsonse_to_message():
     m = message_command
-    
+
     r = TelegramInteraction.parse_message(message=m, bot_name=bot_name)
-    
+
     ti = TelegramInteraction()
-    
+
     rsp = ti.show_message(as_reply=r.ids, message='owls are not what they seem')
-    
+
     assert rsp == TelegramOutMessage(
         method='sendMessage',
         body={
@@ -337,17 +343,17 @@ def test_show_message_as_repsonse_to_message():
         }
     )
 
-        
+
 # message with buttons reply to message
 def test_show_message_as_repsonse_to_message():
     m = message_command
-    
+
     r = TelegramInteraction.parse_message(message=m, bot_name=bot_name)
-    
+
     ti = TelegramInteraction()
-    
+
     rsp = ti.show_message(
-        as_reply=r.ids, 
+        as_reply=r.ids,
         message='press some buttons',
         buttons=[
             Button(text='ok', switch_inline=None, callback='/ok with param'),
@@ -355,7 +361,7 @@ def test_show_message_as_repsonse_to_message():
             Button(text='search', switch_inline='/player ', callback=None),
         ]
     )
-    
+
     assert rsp == TelegramOutMessage(
         method='sendMessage',
         body={
@@ -372,18 +378,18 @@ def test_show_message_as_repsonse_to_message():
             })
         }
     )
-        
+
 
 # message with buttons reply to callback
 def test_show_message_as_repsonse_to_callback():
     m = callback_query
-    
+
     r = TelegramInteraction.parse_message(message=m, bot_name=bot_name)
-    
+
     ti = TelegramInteraction()
-    
+
     rsp = ti.show_message(
-        as_reply=r.ids, 
+        as_reply=r.ids,
         message='press some buttons',
         buttons=[
             Button(text='ok', switch_inline=None, callback='/ok with param'),
@@ -391,7 +397,7 @@ def test_show_message_as_repsonse_to_callback():
             Button(text='search', switch_inline='/player ', callback=None),
         ]
     )
-    
+
     assert rsp == TelegramOutMessage(
         method='sendMessage',
         body={
@@ -407,16 +413,16 @@ def test_show_message_as_repsonse_to_callback():
             })
         }
     )
-        
-        
+
+
 # show contact list
 def test_show_contacts():
     m = inline_query_text
-    
+
     r = TelegramInteraction.parse_message(message=m, bot_name=bot_name)
-    
+
     ti = TelegramInteraction()
-    
+
     rsp = ti.show_contacts(
         as_reply=r.ids,
         contacts=[
@@ -425,7 +431,7 @@ def test_show_contacts():
             Player(nick='Goode', phone='7123438')
         ]
     )
-    
+
     assert rsp == TelegramOutMessage(
         method='answerInlineQuery',
         body={

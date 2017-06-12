@@ -7,11 +7,12 @@ ForgetNickRequest = namedtuple('ForgetNickRequest', ['nick'])
 AddGameRequest = namedtuple('AddGameRequest', ['nicks_won', 'nicks_lost', 'score_won', 'score_lost'])
 GamesRequest = namedtuple('GetListRequest', ['nick', 'with_nicks', 'vs_nicks'])
 PlayerRequest = namedtuple('GetPlayerRequest', ['nick'])
+PlayersRequest = namedtuple('GetPlayersRequest', ['nick_like'])
 
 LISTS_DELIMITER = ';'
 
 
-def from_dict(request_type, args: typing.Dict):
+def valid_request_from_dict(request_type, args: typing.Dict):
     if request_type is AddNickRequest:
         if 'nick' not in args:
             raise AttributeError(f'Invalid arguments: no nick')
@@ -56,5 +57,11 @@ def from_dict(request_type, args: typing.Dict):
             raise AttributeError(f'Invalid arguments: no nick')
 
         return PlayerRequest(nick=args['nick'])
+
+    if request_type is PlayersRequest:
+        if 'nick_like' not in args:
+            raise AttributeError(f'Invalid arguments: no nick_like')
+
+        return PlayersRequest(nick_like=args['nick_like'])
 
     raise AttributeError(f'Unknown request type: {request_type}')

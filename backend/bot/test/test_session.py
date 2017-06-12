@@ -1,34 +1,41 @@
 import pytest
 import logging
+
 from model import Player
+from common import getLogger
 from bot.session import Session
-from bot.common import ifNone
 from bot.telegram_interaction import MessageIds, TelegramInMessage
 from bot.texts import Texts
 
+l = getLogger('Bot')
+l.setLevel(logging.ERROR)
 
-l = logging.getLogger('AbstractSession')
-l.setLevel(logging.DEBUG)
+l = getLogger('BotSession')
+l.setLevel(logging.ERROR)
+
+logger = getLogger('TelegramInteraction')
+l.setLevel(logging.ERROR)
 
 
-class EmptyManage():
-    def save_game(self, game, who):
-        print(f'Game {game} saved by {who}')
+class EmptyBackend():
+    def add_game(self, game, who):
+        return None, game
 
+    def get_player(self, nick=None, phone=None):
+        if nick == 'exists':
+            return None, Player(nick, phone)
+        else:
+            return {'error': f'Player not found: {nick}', 'error_type': 'negative response'}, None
 
-class EmptySearch():
-    def player(self, name=None, phone=None, name_like=None):
-        if name == 'exists':
-            return [Player(name, phone)]
-        
-        if name_like == 'several':
-            return [
+    def get_players(self, nick_like):
+        if nick_like == 'several':
+            return None, [
                 Player('several1', '732422322'),
                 Player('several2', '732422323'),
                 Player('several3', '732422324')
             ]
-        
-        return []
+
+        return {'error': f'Players not found: {nick_like}', 'error_type': 'negative response'}, None
 
 
 sample_message = TelegramInMessage(
@@ -47,11 +54,11 @@ sample_message = TelegramInMessage(
 def test_init():
     s = Session()
 
-    
+
 def test_send_contact_1_known_player():
     s = Session()
-    s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts())
-    
+    s.start(backend=EmptyBackend(), text=Texts())
+
     for i in (
         ('game', ''),
         ('game_player_confirm', Player(nick='exists', phone='7823434'))
@@ -61,19 +68,19 @@ def test_send_contact_1_known_player():
 
 def test_send_contact_1_unknown_player():
     s = Session()
-    s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts())
-    
+    s.start(backend=EmptyBackend(), text=Texts())
+
     for i in (
         ('game', ''),
         ('game_player_confirm', Player(nick='notexists', phone='7823435'))
     ):
         s.process_command(command=i[0], input=i[1], processing_message=sample_message)
-        
+
 
 def test_add_1_unknown_player():
     s = Session()
-    s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts())
-    
+    s.start(backend=EmptyBackend(), text=Texts())
+
     for i in (
         ('game', ''),
         ('', 'notexists'),
@@ -84,8 +91,8 @@ def test_add_1_unknown_player():
 
 def test_add_1_known_and_1_unknown_player():
     s = Session()
-    s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts())
-    
+    s.start(backend=EmptyBackend(), text=Texts())
+
     for i in (
         ('game', ''),
         ('game_player_confirm', Player(nick='exists', phone='7823434')),
@@ -93,11 +100,11 @@ def test_add_1_known_and_1_unknown_player():
         ('game_new_player_phone', '79126632745')
     ):
         s.process_command(command=i[0], input=i[1], processing_message=sample_message)
-        
+
 def test_add_4_known_players_and_set_scores():
     s = Session()
-    s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts())
-    
+    s.start(backend=EmptyBackend(), text=Texts())
+
     for i in (
         ('game', ''),
         ('game_player_confirm', Player(nick='exists', phone='7823431')),

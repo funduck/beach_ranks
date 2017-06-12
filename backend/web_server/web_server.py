@@ -1,15 +1,18 @@
 import functools
 import ssl
-import logging
 import json
 
 from aiohttp import web
+
+from common import initLogger
+logger = initLogger('WebServer')
+
 
 OK_STATUS = 'OK'
 
 
 def respond_ok(response=None, text=None):
-    logging.info(f'responding ok {response} {text}')
+    logger.info(f'responding ok {response} {text}')
 
     if response is not None:
         text = json.dumps(response)
@@ -17,7 +20,7 @@ def respond_ok(response=None, text=None):
 
 
 def respond_error(response=None, text=None):
-    logging.info(f'responding error {response} {text}')
+    logger.info(f'responding error {response} {text}')
 
     if response is not None:
         text = json.dumps(response)
@@ -25,7 +28,7 @@ def respond_error(response=None, text=None):
 
 
 def respond_failure(response=None, text=None):
-    logging.error(f'responding failure {response} {text}')
+    logger.error(f'responding failure {response} {text}')
     if response is not None:
         text = json.dumps(response)
     return web.Response(content_type='text/json', text=text, status=500)
@@ -59,7 +62,7 @@ class WebServer:
         if home_handler is None:
             raise NotImplementedError('Given request handler has not implemented handle_home() method')
         self._app.router.add_get('/', functools.partial(self._handle_wrapper, home_handler))
-        logging.info(f'Registered web resource for GET: /')
+        logger.info(f'Registered web resource for GET: /')
 
         for attr in dir(self._handler):
             if attr.startswith(self._get_prefix):
@@ -67,14 +70,14 @@ class WebServer:
                 method = getattr(self._handler, attr)
                 self._app.router.add_get(f'/{method_name}',
                                          functools.partial(self._handle_wrapper, method))
-                logging.info(f'Registered web resource for GET: /{method_name}')
+                logger.info(f'Registered web resource for GET: /{method_name}')
 
             elif attr.startswith(self._post_prefix):
                 method_name = attr[len(self._post_prefix):]
                 method = getattr(self._handler, attr)
                 self._app.router.add_post(f'/{method_name}',
                                           functools.partial(self._handle_wrapper, method))
-                logging.info(f'Registered web resource for POST: /{method_name}')
+                logger.info(f'Registered web resource for POST: /{method_name}')
 
     async def _handle_wrapper(self, handler, request: web.Request):
         args = dict(zip(request.query.keys(), request.query.values()))

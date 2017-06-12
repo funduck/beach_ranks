@@ -1,9 +1,13 @@
 import datetime
 from typing import List
 
+from common import initLogger
 from model import Player, Rating, Game
 
 from .db import db
+
+
+logger = initLogger('DBSearch')
 
 
 class Search:
@@ -47,8 +51,8 @@ class Search:
                 with_players_ids.append(p.id)
 
         res = await db.execute(Search.sql_find_all_games(
-            player_id=player.id, 
-            vs_players=vs_players_ids, 
+            player_id=player.id,
+            vs_players=vs_players_ids,
             with_players=with_players_ids))
 
         games = []
@@ -86,6 +90,13 @@ class Search:
         return [
             'select player_id, nick, phone from beach_ranks.players where player_id = %s',
             [player_id]
+        ]
+
+    @staticmethod
+    def sql_load_players_nick_like(nick):
+        return [
+            'select player_id, nick, phone from beach_ranks.players where nick LIKE %s',
+            [f'{nick}%']
         ]
 
     @staticmethod
@@ -134,6 +145,25 @@ class Search:
         return p
 
     @staticmethod
+    async def load_players_nick_like(nick):
+        res = await db.execute(Search.sql_load_players_nick_like(nick))
+        if len(res) == 0:
+            return None
+
+        players = []
+        for record in res:
+            player_id, nick, phone = record
+            p = Player(player_id=player_id, nick=nick, phone=phone)
+
+            res = await db.execute(Search.sql_ratings(player_id))
+            if len(res) > 0:
+                p.set_rating(Rating(value=res[0][1], accuracy=res[0][2]))
+
+            players.append(p)
+            
+        return players
+
+    @staticmethod
     async def load_game_by_id(game_id):
         g = Game(game_id=game_id)
         res = await db.execute(Search.sql_load_game_by_id(game_id))
@@ -141,7 +171,7 @@ class Search:
         g.date = datetime.datetime.strptime(res[0], '%Y-%m-%d %H:%M:%S')
         g.score_won = res[1]
         g.score_lost = res[2]
-        
+
         res = await db.execute(Search.sql_load_game_players_by_id(game_id))
 
         for record in res:

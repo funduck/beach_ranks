@@ -1,10 +1,14 @@
 from datetime import datetime
+import logging
 
 import pytest
 
 from db.db_manage import Manage
 from db.db_search import Search
 from model import Player, Rating, Game
+
+
+logging.getLogger('DB').setLevel(logging.ERROR)
 
 
 @pytest.mark.asyncio
@@ -22,7 +26,12 @@ async def test_all():
             else:
                 team_lost.append(p)
 
+            await Manage.delete_player(p)
             await Manage.save_player(p)
+
+        # find players LIKE
+        players = await Search.load_players_nick_like('New')
+        assert len(players) == 4
 
         # game
         g = Game(date=datetime.now(), nicks_won=[p.nick for p in team_won], nicks_lost=[p.nick for p in team_lost],

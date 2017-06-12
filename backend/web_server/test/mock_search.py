@@ -11,6 +11,9 @@ class MockSearch:
     async def load_player_by_nick(self, nick):
         return self._players.get(nick, None)
 
+    async def load_players_nick_like(self, nick):
+        return [self._players.get(nick, None)]
+
     async def games(self, nick, with_players=None, vs_players=None):
         games_filtered = []
         for game in self._games:

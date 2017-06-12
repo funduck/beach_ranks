@@ -1,12 +1,16 @@
 import multiprocessing as mp
 import time
 
+import json
 import os
 import pytest
 import requests
+import logging
 from web_server import WebServer
 
 from web_server.test.mock_request_handler import MockRequestHandler
+
+logging.getLogger('WebServer').setLevel(logging.ERROR)
 
 cert_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,12 +30,12 @@ def server_credentials():
 
 def send_https_get(host, port, resource='', params=None):
     r = requests.get(f'https://{host}:{port}{resource}', params=params, verify=False)
-    return r.text
+    return json.loads(r.text)['result']
 
 
 def send_https_post(host, port, resource='', params=None):
     r = requests.post(f'https://{host}:{port}{resource}', params=params, verify=False)
-    return r.text
+    return json.loads(r.text)['result']
 
 
 @pytest.mark.parametrize('resource,query', [
@@ -69,4 +73,3 @@ def test_post_resources(server_credentials, resource, query):
         assert str(query) == resp_query
     else:
         assert '{}' == resp_query
-

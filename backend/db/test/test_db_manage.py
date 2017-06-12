@@ -1,10 +1,14 @@
 from datetime import datetime
+import logging
+
 import pytest
 
 from db.db_manage import Manage
+from db.db_search import Search
 from model import Player, Rating, Game
 
-from db.db_search import Search
+
+logging.getLogger('DB').setLevel(logging.ERROR)
 
 
 @pytest.mark.asyncio
@@ -17,6 +21,7 @@ async def test_all():
         for i in range(0, 4):
             p = Player(nick=f'NewPlayer{i}')
             p.set_rating(Rating(value=1200, accuracy=0))
+            await Manage.delete_player(p)
             await Manage.save_player(p)
             if i < 2:
                 team_won.append(p)
@@ -57,4 +62,3 @@ async def test_all():
         await Manage.delete_game(g)
         for p in team_won + team_lost:
             await Manage.delete_player(p)
-

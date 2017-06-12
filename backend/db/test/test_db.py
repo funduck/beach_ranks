@@ -14,7 +14,6 @@ async def test_select():
     db = DB()
     await db.connect()
     res = await db.execute(['select 1 as result', []])
-    print(res)
     assert res[0][0] == 1
 
 
@@ -23,6 +22,4 @@ async def test_call_procedure():
     db = DB()
     await db.connect()
     res = await db.execute(['select * from beach_ranks.test();', []])
-    print(res)
     assert res[0][0] == 1
-

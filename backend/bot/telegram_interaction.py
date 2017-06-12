@@ -1,19 +1,13 @@
 import json
 import re
-import logging
-import sys
 from collections import namedtuple
-from .common_types import Button
+
+from common import initLogger
+from .types import Button
 from model import Player
 
 
-logger = logging.getLogger('TelegramInteraction')
-logger.setLevel(logging.INFO)
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(0)
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s  %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+logger = initLogger('TelegramInteraction')
 
 
 MessageIds = namedtuple('MessageIds', [
@@ -43,7 +37,7 @@ class TelegramInteraction():
         input = None
         command = None
         ids = None
-        
+
         if 'edited_message' in message or 'message' in message:
             kind = 'message'
             body = message['message']
@@ -84,22 +78,22 @@ class TelegramInteraction():
         if command is not None:
             logger.log(0, f'parsing command \'{command}\'')
             m = re.search(f'^(@{bot_name} |)(\/\w*|)(@{bot_name}|)(\s*)(.*)', command)
-            
+
             if input is None and m is not None:
                 input = m.group(5)
-                
+
             if input is not None and len(input) == 0 and len(m.group(4)) == 0:
                 input = None
-                
+
             if m is not None:
                 command = m.group(2)
                 if command is not None:
                     command = re.search('\/(\w*)', command)
                     if command is not None:
                         command = command.group(1)
-                
+
         logger.log(0, f'command \'{command}\' input \'{input}\'')
-            
+
         # if something wrong, it throws exception
 
         return TelegramInMessage(
@@ -120,21 +114,21 @@ class TelegramInteraction():
                 'text': message
             }
         }
-        
+
         r['body']['chat_id'] = as_reply.chat_id if as_reply.chat_id is not None else as_reply.user_id
         if as_reply.message_id is not None:
             r['body']['reply_to_message_id'] = as_reply.message_id
 
         if buttons is not None:
             logger.warn('now support 1 row only, when change to multirow, change it in scenarios too')
-            
+
             all_btns = [[]]
             btns = all_btns[0]
             for b in buttons:
                 if b.switch_inline is not None:
                     btns.append({
                         'text': b.text,
-                        'switch_inline_query_current_chat': b.switch_inline 
+                        'switch_inline_query_current_chat': b.switch_inline
                     })
                 else:
                     btns.append({
@@ -147,7 +141,7 @@ class TelegramInteraction():
                     'inline_keyboard': all_btns
                 })
             })
-            
+
         return TelegramOutMessage(
             method=r['method'],
             body=r['body']
@@ -172,8 +166,8 @@ class TelegramInteraction():
                 'results': json.dumps(c)
             }
         }
-        
+
         return TelegramOutMessage(
             method=r['method'],
             body=r['body']
-        ) 
+        )

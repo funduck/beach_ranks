@@ -18,6 +18,10 @@ async def test_nick(storage):
     handler = RestRequestHandler(search, manage)
     await handler.post_nick({'nick': 'test'})
     assert await search.load_player_by_nick('test') is not None
+    with pytest.raises(AttributeError):
+        await handler.post_nick({})
+    with pytest.raises(RuntimeError):
+        await handler.post_nick({'nick': 'test'})
 
 
 @pytest.mark.asyncio
@@ -27,10 +31,17 @@ async def test_get_player(storage):
     await handler.post_nick({'nick': 'test'})
     output = await handler.get_player({'nick': 'test'})
     assert isinstance(output, dict)
-    with pytest.raises(AttributeError):
-        await handler.post_nick({})
     with pytest.raises(RuntimeError):
-        await handler.post_nick({'nick': 'test'})
+        await handler.get_player({'nick': 'test_not_exists'})
+
+
+@pytest.mark.asyncio
+async def test_get_players(storage):
+    search, manage = storage
+    handler = RestRequestHandler(search, manage)
+    await handler.post_nick({'nick': 'test'})
+    output = await handler.get_players({'nick_like': 'test'})
+    assert isinstance(output[0], dict)
 
 
 @pytest.mark.asyncio

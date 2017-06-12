@@ -1,21 +1,23 @@
 from datetime import datetime
 from typing import List
 
+from common import initLogger
 from model import Game, Player, Rating
 
 from db.db_search import Search
 from .db import db
 
 
-class ManageException(Exception):
-    pass
+ratingSystem = 'trueskill'
+logger = initLogger('DBManage')
 
 
 class Manage:
     @staticmethod
     async def add_nick(nick, rating=None, phone=None, who='test'):
         if nick is None:
-            raise ManageException('add_nick: nick is None')
+            logger.error('add_nick: nick is None')
+            raise AttributeError('add_nick: nick is None')
 
         p = Player(nick=nick, phone=phone)
         await p.load()
@@ -49,11 +51,11 @@ class Manage:
         await g.save(who)
         for p in won:
             # TODO real rating
-            await g.save_rating(p, "trueskill", p.get_rating("trueskill"), new_ratings[p.nick])
+            await g.save_rating(p, ratingSystem, p.get_rating(ratingSystem), new_ratings[p.nick])
 
         for p in lost:
             # TODO real rating
-            await g.save_rating(p, "trueskill", p.get_rating("trueskill"), new_ratings[p.nick])
+            await g.save_rating(p, ratingSystem, p.get_rating(ratingSystem), new_ratings[p.nick])
         return g
 
     @staticmethod
@@ -118,9 +120,10 @@ class Manage:
     @staticmethod
     def sql_delete_player(player: Player):
         return [
-            'delete from beach_ranks.players where player_id = %s;'
-            'delete from beach_ranks.ratings where player_id = %s;',
-            [player.id, player.id]
+            'delete from beach_ranks.ratings where player_id in '
+            '(select player_id from beach_ranks.players where player_id = %s or nick = %s);'
+            'delete from beach_ranks.players where player_id = %s or nick = %s;',
+            [player.id, player.nick, player.id, player.nick]
         ]
 
     @staticmethod
@@ -134,20 +137,31 @@ class Manage:
     async def save_game(game: Game, who='test'):
         res = await db.execute(Manage.sql_save_game(game, who))
         game.id = res[0][0]
+
         players_won = [await Search.load_player_by_nick(nick) for nick in game.nicks_won]
         players_lost = [await Search.load_player_by_nick(nick) for nick in game.nicks_lost]
+
         await db.execute(Manage.sql_save_game_players(game, players_won, players_lost, who))
         for p in players_won + players_lost:
-            await db.execute(Manage.sql_save_game_rating(game, p.id, 'trueskill', game.rating_before(p.nick),
-                                                         game.rating_after(p.nick), who))
+            await db.execute(Manage.sql_save_game_rating(
+                game,
+                p.id,
+                ratingSystem,
+                game.rating_before(p.nick),
+                game.rating_after(p.nick),
+                who
+            ))
 
     @staticmethod
     async def delete_game(game: Game):
-        await db.execute(Manage.sql_delete_game(game))
+        if game is not None:
+            await db.execute(Manage.sql_delete_game(game))
+        else:
+            logger.warn('delete_game() game is None')
 
     @staticmethod
     async def delete_player(player: Player):
-        await db.execute(Manage.sql_delete_player(player))
-
-
-
+        if player is not None:
+            await db.execute(Manage.sql_delete_player(player))
+        else:
+            logger.warn('delete_player() player is None')

@@ -6,7 +6,6 @@ import time
 
 from model import Player
 from bot.session import Session
-from bot.common import ifNone
 from bot.telegram_interaction import TelegramInteraction, MessageIds, TelegramInMessage, TelegramOutMessage
 from bot.texts import Texts
 
