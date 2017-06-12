@@ -85,7 +85,7 @@ class Search:
     @staticmethod
     def sql_load_player_by_nick(nick):
         return [
-            'select player_id, nick, phone from beach_ranks.players where nick = %s',
+            'select player_id, nick, phone from beach_ranks.players where UPPER(nick) = UPPER(%s)',
             [nick]
         ]
 

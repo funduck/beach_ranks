@@ -8,7 +8,7 @@ from bot.telegram_interaction import MessageIds, TelegramInMessage
 from bot.texts import Texts
 
 l = getLogger('Bot')
-l.setLevel(logging.ERROR)
+l.setLevel(logging.DEBUG)
 
 l = getLogger('BotSession')
 l.setLevel(logging.ERROR)
@@ -120,5 +120,26 @@ def test_add_4_known_players_and_set_scores():
         ('', '-1'),
         ('', '14'),
         ('', '13')
+    ):
+        s.process_command(command=i[0], input=i[1], processing_message=sample_message)
+
+def test_add_1_unknown_player():
+    s = Session()
+    s.start(backend=EmptyBackend(), text=Texts())
+
+    for i in (
+        ('nick', ''),
+        ('', 'unknown player'),
+        ('nick_new_player_phone', '79126632745')
+    ):
+        s.process_command(command=i[0], input=i[1], processing_message=sample_message)
+
+def test_add_1_known_player():
+    s = Session()
+    s.start(backend=EmptyBackend(), text=Texts())
+
+    for i in (
+        ('nick', ''),
+        ('', 'exists')
     ):
         s.process_command(command=i[0], input=i[1], processing_message=sample_message)
