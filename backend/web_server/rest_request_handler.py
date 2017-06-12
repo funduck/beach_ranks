@@ -2,12 +2,15 @@ import typing
 from datetime import datetime
 
 from model import Player, Game
-
+from common import initLogger
 from db.db_manage import Manage
 from db.db_search import Search
 from ranking.ranking import TrueSkillRanking
 from valid_requests import AddNickRequest, ForgetNickRequest, AddGameRequest, GamesRequest, PlayerRequest, PlayersRequest, valid_request_from_dict
 from web_server.web_server import OK_STATUS
+
+
+logger = initLogger('RestRequestHandler')
 
 
 class RestRequestHandler:
@@ -21,6 +24,7 @@ class RestRequestHandler:
         return f'/?{args}'
 
     async def post_nick(self, args: typing.Dict):
+        logger.debug(f'post_nick {args}')
         request = valid_request_from_dict(AddNickRequest, args)
 
         if await self._search.load_player_by_nick(request.nick) is not None:
@@ -32,6 +36,7 @@ class RestRequestHandler:
         return p.as_dict()
 
     async def post_forget(self, args: typing.Dict):
+        logger.debug(f'post_forget {args}')
         request = valid_request_from_dict(ForgetNickRequest, args)
 
         p = await self._search.load_player_by_nick(request.nick)
@@ -42,6 +47,7 @@ class RestRequestHandler:
         return p.as_dict()
 
     async def post_game(self, args: typing.Dict):
+        logger.debug(f'post_game {args}')
         request = valid_request_from_dict(AddGameRequest, args)
 
         players = []
@@ -68,12 +74,14 @@ class RestRequestHandler:
         return game.as_dict()
 
     async def get_games(self, args: typing.Dict):
+        logger.debug(f'get_games {args}')
         request = valid_request_from_dict(GamesRequest, args)
 
         games = await self._search.games(request.nick, request.with_nicks, request.vs_nicks)
         return [game.as_dict() for game in games]
 
     async def get_player(self, args: typing.Dict):
+        logger.debug(f'get_player {args}')
         request = valid_request_from_dict(PlayerRequest, args)
 
         player = await self._search.load_player_by_nick(request.nick)
@@ -83,6 +91,7 @@ class RestRequestHandler:
         return player.as_dict()
 
     async def get_players(self, args: typing.Dict):
+        logger.debug(f'get_players {args}')
         request = valid_request_from_dict(PlayersRequest, args)
 
         players = await self._search.load_players_nick_like(request.nick_like)

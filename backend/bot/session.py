@@ -50,6 +50,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     state = SessionWorkflow()
 
     def start(self, backend, text):
+        logger.debug('start')
         self.backend = backend
         self.text = text
 
@@ -133,6 +134,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     ''' Transitions '''
     @xworkflows.transition()
     def game(self, input=None, processing_message=None):
+        logger.debug('game')
         self._game = Game()
         self.show_message(
             message=self.text.game_add_start(),
@@ -141,6 +143,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     @xworkflows.transition()
     def find_player(self, input=None, processing_message=None):
+        logger.debug('find_player')
         if input is not None and len(input) > 1:
             err, players = self.backend.get_players(nick_like=input)
             self._check_error_is_fatal(err)
@@ -151,10 +154,12 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     @xworkflows.transition()
     def game_player_confirm(self, player, processing_message=None):
+        logger.debug('game_player_confirm')
         self._player = player
 
     @xworkflows.transition()
     def game_add_new_player(self, player, processing_message=None):
+        logger.debug('game_add_new_player')
         self._player = player
         self.show_message(
             message=self.text.player_adding_someone_new(),
@@ -163,10 +168,12 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     @xworkflows.transition()
     def game_new_player_phone(self, phone, processing_message=None):
+        logger.debug('game_new_player_phone')
         self._player.phone = self._normalize_phone(phone)
 
     @xworkflows.transition()
     def game_set_score_won(self, score, processing_message=None):
+        logger.debug('game_set_score_won')
         self._game.score_won = score
         self.show_message(
             message=self.text.score_winner_set_next_looser(),
@@ -175,6 +182,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     @xworkflows.transition()
     def game_set_score_lost(self, score, processing_message=None):
+        logger.debug('game_set_score_lost')
         self._game.score_lost = score
         '''self.show_message(
             message=self.text.score_set_done(),
@@ -183,6 +191,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     @xworkflows.transition()
     def game_set_scores(self, arg=None, processing_message=None):
+        logger.debug('game_set_scores')
         self.show_message(
             message=self.text.score_set_winner(),
             processing_message=processing_message
@@ -190,10 +199,12 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     @xworkflows.transition()
     def game_next_player(self, arg=None, processing_message=None):
+        logger.debug('game_next_player')
         pass
 
     @xworkflows.transition()
     def game_save(self, processing_message=None):
+        logger.debug('game_save')
         err, g = self.backend.add_game(game=self._game, who=processing_message.ids.user_id)
         self._check_error_is_fatal(err)
         self._game = g
@@ -204,6 +215,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     @xworkflows.on_enter_state('s_game_player_confirmed')
     def _on_s_game_player_confirmed(self, transition_res=None, transition_arg=None, processing_message=None):
+        logger.debug('_on_s_game_player_confirmed')
         self._add_player_to_game()
         self.show_message(
             message=self.text.player_added(),
@@ -216,6 +228,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     @xworkflows.on_enter_state('s_game_adding_player')
     def _on_s_game_adding_player(self, transition_res=None, transition_arg=None, processing_message=None):
+        logger.debug('_on_s_game_adding_player')
         self.show_message(
             message=self.text.game_add_next_player(self._game),
             buttons=[Button(
@@ -228,6 +241,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     @xworkflows.on_enter_state('s_game_created')
     def _on_s_game_created(self, transition_res=None, transition_arg=None, processing_message=None):
+        logger.debug('_on_s_game_created')
         self.game_save(processing_message)
 
     def _normalize_phone(self, args=None):

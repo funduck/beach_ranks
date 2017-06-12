@@ -19,6 +19,7 @@ def check_response_is_error(response):
 
 def do_request(url, params, method):
     try:
+        logger.debug(f'request {method} {url} {params}')
         if method == 'GET':
             return json.loads(requests.get(url=url, params=params).text)
         if method == 'POST':

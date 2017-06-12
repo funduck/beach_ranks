@@ -1,5 +1,8 @@
 from web_server import WebServer, RestRequestHandler
 from optparse import OptionParser
+import logging
+
+logging.getLogger('RestRequestHandler').setLevel(logging.DEBUG)
 
 parser = OptionParser()
 parser.add_option('-H', '--host', dest='host', help='host for web-server (0.0.0.0 by default)')
