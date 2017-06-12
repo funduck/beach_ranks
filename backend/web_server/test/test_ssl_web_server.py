@@ -21,7 +21,7 @@ def server_credentials():
     path = os.path.dirname(os.path.abspath(__file__))
     env = os.environ.copy()
     p = subprocess.Popen([sys.executable, f'{path}/run_mock_ssl_web_server.py'], env=env)
-    time.sleep(1)
+    time.sleep(2)
     yield (host, port)
     p.kill()
     p.wait()
