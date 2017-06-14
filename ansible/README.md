@@ -26,6 +26,7 @@ This will make those steps
 * stop beachranks application
 * update sources from git
 * update conda environment
+* run tests
 * start beachranks application
 
 ## Change conda environment
