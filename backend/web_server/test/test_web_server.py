@@ -26,12 +26,12 @@ def server_credentials():
 
 def send_http_get(host, port, resource='', params=None):
     r = requests.get(f'http://{host}:{port}{resource}', params=params)
-    return json.loads(r.text)['result']
+    return json.loads(r.text)
 
 
 def send_http_post(host, port, resource='', params=None):
     r = requests.post(f'http://{host}:{port}{resource}', params=params)
-    return json.loads(r.text)['result']
+    return json.loads(r.text)
 
 
 @pytest.mark.parametrize('resource,query', [
