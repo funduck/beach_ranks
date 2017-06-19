@@ -1,17 +1,24 @@
+import typing
 import logging
+from optparse import OptionParser
 import urllib.request
 import json
 import time
+
+from web_server import WebServer
 
 from bot.session import Session
 from bot.telegram_interaction import TelegramInteraction, TelegramOutMessage
 from bot.rest_client import RestClient
 from bot.texts import Texts
 
+
+logger = logging.getLogger('Bot')
 logging.getLogger('Bot').setLevel(logging.DEBUG)
 logging.getLogger('BotSession').setLevel(logging.DEBUG)
 logging.getLogger('TelegramInteraction').setLevel(logging.DEBUG)
 logging.getLogger('BotRestClient').setLevel(logging.DEBUG)
+
 
 def send_request(message):
     if message is None:
@@ -22,42 +29,42 @@ def send_request(message):
     return json.loads(urllib.request.urlopen(url).read())
 
 
-telegram = TelegramInteraction()
-sessions = {}
+class BotRestRequestHandler:
+    def __init__(self):
+        self.sessions = {}
+        self.telegram = TelegramInteraction()
 
-def get_updates(last_id=0):
-    updates = send_request(TelegramOutMessage(body={'offset': last_id+1}, method='getUpdates'))
-    updates = updates['result']
-    new_last_id = last_id
-    for update in updates:
+    async def get_home(self, args: typing.Dict):
+        return f'/?{args}'
+
+    async def post_beachranks_bot(self, args: typing.Dict):
+        logger.debug(f'post_beachranks_bot {args}')
+        update = args['body']
+        if update is None:
+            return 'no body'
+
+        update = json.loads(update.decode('utf-8'))
         print('\nresponding to:\n', update)
 
-        if update['update_id'] > new_last_id:
-            new_last_id = update['update_id']
-
-        if last_id == 0:
-            continue
-
-        m = telegram.parse_message(message=update, bot_name='beachranks_bot')
-        if m.ids.user_id in sessions:
-            s = sessions[m.ids.user_id]
+        m = self.telegram.parse_message(message=update, bot_name='beachranks_bot')
+        if m.ids.user_id in self.sessions:
+            s = self.sessions[m.ids.user_id]
         else:
             s = Session()
             s.start(backend=RestClient('localhost', 9999), text=Texts(locale='ru')) # '185.4.74.144'
-            sessions[m.ids.user_id] = s
+            self.sessions[m.ids.user_id] = s
 
         res = s.process_request(update)
         for response in res:
             send_request(response)
 
-    return new_last_id
 
+parser = OptionParser()
+parser.add_option('-H', '--host', dest='host', help='host for web-server (0.0.0.0 by default)')
+parser.add_option('-P', '--port', dest='port', help='port for web-server (8080 by default)')
+(options, args) = parser.parse_args()
+host = options.host
+port = int(options.port) if options.port is not None else 8080
 
-def run():
-    last_update = 0
-    while True:
-        last_update = get_updates(last_update)
-        time.sleep(5)
-
-
-run()
+server = WebServer(BotRestRequestHandler(), host=options.host, port=port)
+server.run()

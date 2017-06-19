@@ -81,6 +81,10 @@ class WebServer:
 
     async def _handle_wrapper(self, handler, request: web.Request):
         args = dict(zip(request.query.keys(), request.query.values()))
+        
+        if request.has_body:
+            args['body'] = await request.read()
+
         try:
             result = await handler(args)
         except AttributeError as e:
