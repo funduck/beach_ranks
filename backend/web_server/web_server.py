@@ -19,12 +19,12 @@ def respond_ok(response=None, text=None):
     return web.Response(content_type='text/json', text=text, status=200)
 
 
-def respond_error(response=None, text=None):
+def respond_error(response=None, text=None, code=406):
     logger.info(f'responding error {response} {text}')
 
     if response is not None:
         text = json.dumps(response)
-    return web.Response(content_type='text/json', text=text, status=400)
+    return web.Response(content_type='text/json', text=text, status=406)
 
 
 def respond_failure(response=None, text=None):
@@ -85,15 +85,15 @@ class WebServer:
             result = await handler(args)
         except AttributeError as e:
             return respond_error(response={
-                'error': str(e), 'error_type': 'bad arguments'
+                'error': str(e), 'message': 'bad arguments'
             })
         except RuntimeError as e:
             return respond_error(response={
-                'error': str(e), 'error_type': 'negative response'
+                'error': str(e), 'message': 'negative response'
             })
         except Exception as e:
             return respond_failure(response={
-                'error': str(e), 'error_type': 'server failure'
+                'error': str(e), 'message': 'server failure'
             })
 
-        return respond_ok(response={'result': result})
+        return respond_ok(response=result)

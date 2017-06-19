@@ -53,6 +53,5 @@ class MockRequestHandler:
         else:
             return []
 
-
     async def get_help(self, args: typing.Dict):
         return f'/help?{args}'

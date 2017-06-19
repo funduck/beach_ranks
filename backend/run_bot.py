@@ -43,7 +43,7 @@ def get_updates(last_id=0):
             s = sessions[m.ids.user_id]
         else:
             s = Session()
-            s.start(backend=RestClient('localhost', 8080), text=Texts(locale='ru'))
+            s.start(backend=RestClient('localhost', 9999), text=Texts(locale='ru')) # '185.4.74.144'
             sessions[m.ids.user_id] = s
 
         res = s.process_request(update)
