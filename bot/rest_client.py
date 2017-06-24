@@ -38,7 +38,7 @@ class RestClient():
             method='GET'
         )
         if code != 200:
-            return response
+            return response, None
         else:
             return None, player_from_dict(response)
 
@@ -49,7 +49,7 @@ class RestClient():
             method='GET'
         )
         if code != 200:
-            return response
+            return response, []
         else:
             return None, [player_from_dict(player) for player in response]
 
@@ -63,7 +63,7 @@ class RestClient():
             method='POST'
         )
         if code != 200:
-            return response
+            return response, None
         else:
             return None, player_from_dict(response)
 
@@ -77,7 +77,7 @@ class RestClient():
             method='POST'
         )
         if code != 200:
-            return response
+            return response, None
         else:
             return None, player_from_dict(response)
 
@@ -97,7 +97,7 @@ class RestClient():
             method='POST'
         )
         if code != 200:
-            return response
+            return response, None
         else:
             return None, game_from_dict(response)
 
@@ -112,6 +112,6 @@ class RestClient():
             method='GET'
         )
         if code != 200:
-            return response
+            return response, []
         else:
             return None, [game_from_dict(game) for game in response]

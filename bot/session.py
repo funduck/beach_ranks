@@ -76,8 +76,8 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         ('s_players', 'check_player_found', ('players_found', 'players_not_found'))
     )
 
-    def _check_error_is_fatal(self, err):
-        if err is not None and err['error_type'] != 'negative response':
+    def _check_error_is_fatal(self, err, processing_message):
+        if err is not None and err['message'] != 'negative response':
             raise RuntimeError(json.dumps(err))
 
     ''' Checks '''
@@ -88,7 +88,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             return (0, user_input)
 
         err, player = self.backend.get_player(nick=user_input)
-        self._check_error_is_fatal(err)
+        self._check_error_is_fatal(err, processing_message)
         if player is not None:
             return (0, player)
         else:
@@ -100,7 +100,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             user_input = user_input.nick
 
         err, player = self.backend.get_player(nick=user_input)
-        self._check_error_is_fatal(err)
+        self._check_error_is_fatal(err, processing_message)
         if player is not None:
             return (0, player)
         else:
@@ -184,7 +184,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         logger.debug('game_new_player_phone')
         self._player.phone = self._normalize_phone(phone)
         err, self._player = self.backend.add_player(player=self._player, who=processing_message.ids.user_id)
-        self._check_error_is_fatal(err)
+        self._check_error_is_fatal(err, processing_message)
 
     @xworkflows.transition()
     def game_set_score_won(self, score, processing_message=None):
@@ -221,7 +221,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     def game_save(self, processing_message=None):
         logger.debug('game_save')
         err, g = self.backend.add_game(game=self._game, who=processing_message.ids.user_id)
-        self._check_error_is_fatal(err)
+        self._check_error_is_fatal(err, processing_message)
         self._game = g
         self.show_message(
             message=self.text.game_saved(),
@@ -258,9 +258,9 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         logger.debug('nick_new_player_phone')
         self._player.phone = self._normalize_phone(phone)
         err, self._player = self.backend.add_player(player=self._player, who=processing_message.ids.user_id)
-        self._check_error_is_fatal(err)
+        self._check_error_is_fatal(err, processing_message)
         self.show_message(
-            message=self.text.nick_added(),
+            message=self.text.nick_added(self._player),
             processing_message=processing_message
         )
 
@@ -337,7 +337,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             user_input = user_input.strip()
         if user_input is not None and len(user_input) > 2:
             err, players = self.backend.get_players(nick_like=user_input)
-            self._check_error_is_fatal(err)
+            self._check_error_is_fatal(err, processing_message)
             self.show_contacts(
                 contacts=players,
                 processing_message=processing_message

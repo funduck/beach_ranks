@@ -46,7 +46,7 @@ class Texts():
             else:
                 team = 'looser'
                 player = len(game.nicks_lost) + 1
-            return f'Team \'{team}\'\nenter {player} player\'s name'
+            return f'Team \'{team}\' enter {player} player\'s name'
         if self.locale == 'ru':
             if len(game.nicks_won) < 2:
                 team = 'победитель'
@@ -54,7 +54,7 @@ class Texts():
             else:
                 team = 'проигравший'
                 player = len(game.nicks_lost) + 1
-            return f'Команда \'{team}\'\nдобавь {player}-го игрока'
+            return f'Команда \'{team}\' добавь {player}-го игрока'
 
     def game_add_new_player(self):
         if self.locale == 'en':
@@ -110,11 +110,11 @@ class Texts():
         if self.locale == 'ru':
             return 'Какой у него телефон?'
 
-    def nick_added(self):
+    def nick_added(self, player):
         if self.locale == 'en':
-            return 'Player added'
+            return f'Player \'{player.nick}\' added'
         if self.locale == 'ru':
-            return 'Игрок добавлен'
+            return f'Игрок \'{player.nick}\' добавлен'
 
     def players(self):
         if self.locale == 'en':
@@ -124,9 +124,9 @@ class Texts():
 
     def players_found(self, player):
         if self.locale == 'en':
-            return f'{player.nick} {player.get_rating()}'
+            return f'\'{player.nick}\' rating: {round(player.get_rating()[0], 2)} accuracy: {round(player.get_rating()[1], 2)}'
         if self.locale == 'ru':
-            return f'{player.nick} {player.get_rating()}'
+            return f'\'{player.nick}\' рейтинг: {round(player.get_rating()[0], 2)} точность: {round(player.get_rating()[1], 2)}'
 
     def players_not_found(self):
         if self.locale == 'en':

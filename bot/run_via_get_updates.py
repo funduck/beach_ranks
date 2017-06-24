@@ -18,7 +18,7 @@ def send_request(message):
     if message is None:
         return
     p = urllib.parse.urlencode(message.body)
-    print('\n', message.method, '\n', message.body)
+    # print('\n', message.method, '\n', message.body)
     url = 'https://api.telegram.org/bot299909888:AAEjhCS1I55FFrRrLyMiUFpZDH8nu5JZ0Q8/%s?%s' % (message.method, p)
     return json.loads(urllib.request.urlopen(url).read())
 
@@ -59,7 +59,7 @@ def run():
     last_update = 0
     while True:
         last_update = get_updates(last_update)
-        time.sleep(5)
+        time.sleep(2)
 
 
 run()
