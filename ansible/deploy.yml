@@ -23,12 +23,5 @@
   - name: Run beachranks tests
     command: bash /home/admin/beachranks/run_tests.sh
 
-  - name: Start beachranks application
-    command: bash /home/admin/beachranks/backend/run.sh
-
-
-
-
-
-
-
+  - name: Start beachranks RESR server
+    command: bash /home/admin/beachranks/rest_service/run.sh
