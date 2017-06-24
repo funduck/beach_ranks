@@ -6,7 +6,7 @@ from common.model import Player
 
 from common.logger import get_logger
 from ..telegram_interaction import TelegramInteraction, TelegramOutMessage
-from ..types import Button
+from ..elements import Button
 
 get_logger('TelegramInteraction').setLevel(logging.ERROR)
 

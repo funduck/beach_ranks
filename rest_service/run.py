@@ -1,7 +1,8 @@
 import logging
 from optparse import OptionParser
 
-from rest_service.web_server import WebServer, RestRequestHandler
+from common import WebServer
+from rest_service.request_handler import RestRequestHandler
 
 logging.getLogger('RestRequestHandler').setLevel(logging.DEBUG)
 logging.getLogger('DB').setLevel(logging.DEBUG)

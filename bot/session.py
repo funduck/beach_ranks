@@ -5,7 +5,7 @@ from common.model import Game, Player
 
 from common.logger import init_logger
 from .abstract_session import AbstractSession
-from .types import Button
+from .elements import Button
 
 logger = init_logger('BotSession')
 

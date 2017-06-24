@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 import typing
@@ -28,7 +29,9 @@ def send_request(message):
 
 
 class BotRestRequestHandler:
-    def __init__(self):
+    def __init__(self, restHost, restPort):
+        self.restHost = restHost
+        self.restPort = restPort
         self.sessions = {}
         self.telegram = TelegramInteraction()
 
@@ -49,7 +52,7 @@ class BotRestRequestHandler:
             s = self.sessions[m.ids.user_id]
         else:
             s = Session()
-            s.start(backend=RestClient('localhost', 9999), text=Texts(locale='ru')) # '185.4.74.144'
+            s.start(backend=RestClient(restHost, restPort), text=Texts(locale='ru')) # '185.4.74.144'
             self.sessions[m.ids.user_id] = s
 
         res = s.process_request(update)
@@ -59,10 +62,13 @@ class BotRestRequestHandler:
 
 parser = OptionParser()
 parser.add_option('-H', '--host', dest='host', help='host for web-server (0.0.0.0 by default)')
-parser.add_option('-P', '--port', dest='port', help='port for web-server (88 by default)')
+parser.add_option('-P', '--port', dest='port', help='port for web-server (8443 by default)')
 (options, args) = parser.parse_args()
 host = options.host
-port = int(options.port) if options.port is not None else 88
+port = int(options.port) if options.port is not None else 8443
 
-server = WebServer(BotRestRequestHandler(), host=options.host, port=port)
+path = os.path.dirname(os.path.abspath(__file__))
+server = WebServer(BotRestRequestHandler('localhost', 9999),
+    host=options.host, port=port,
+    ssl_files=(f'{path}/../common/test/cert.pem', f'{path}/../common/test/pkey.pem'))
 server.run()
