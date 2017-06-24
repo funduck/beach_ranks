@@ -97,6 +97,10 @@ async def test_get_games(storage):
     with pytest.raises(AttributeError):
         await handler.get_games({})
 
+    response = await handler.get_games({'nick': 'player0'})
+    games = response
+    assert len(games) == 0
+
     response = await handler.get_games({'nick': 'player1', 'with_nicks': 'player2'})
     games = response
     assert len(games) == 1

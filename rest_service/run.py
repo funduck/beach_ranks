@@ -8,6 +8,7 @@ logging.getLogger('RestRequestHandler').setLevel(logging.DEBUG)
 logging.getLogger('DB').setLevel(logging.DEBUG)
 logging.getLogger('DBSearch').setLevel(logging.DEBUG)
 logging.getLogger('DBManage').setLevel(logging.DEBUG)
+logging.getLogger('WebServer').setLevel(logging.DEBUG)
 
 
 parser = OptionParser()

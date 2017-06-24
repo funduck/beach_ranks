@@ -17,6 +17,7 @@ logging.getLogger('Bot').setLevel(logging.DEBUG)
 logging.getLogger('BotSession').setLevel(logging.DEBUG)
 logging.getLogger('TelegramInteraction').setLevel(logging.DEBUG)
 logging.getLogger('BotRestClient').setLevel(logging.DEBUG)
+logging.getLogger('WebServer').setLevel(logging.DEBUG)
 
 
 def send_request(message):

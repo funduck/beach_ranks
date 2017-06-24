@@ -78,8 +78,7 @@ def test_init():
 
 
 def test_send_contact_1_known_player():
-    s = Session()
-    s.start(backend=EmptyBackend(), text=Texts())
+    s = Session(backend=EmptyBackend(), text=Texts())
 
     for i in (
         ('game', ''),
@@ -89,8 +88,7 @@ def test_send_contact_1_known_player():
 
 
 def test_send_contact_1_unknown_player():
-    s = Session()
-    s.start(backend=EmptyBackend(), text=Texts())
+    s = Session(backend=EmptyBackend(), text=Texts())
 
     for i in (
         ('game', ''),
@@ -100,8 +98,7 @@ def test_send_contact_1_unknown_player():
 
 
 def test_add_1_unknown_player():
-    s = Session()
-    s.start(backend=EmptyBackend(), text=Texts())
+    s = Session(backend=EmptyBackend(), text=Texts())
 
     for i in (
         ('game', ''),
@@ -112,16 +109,14 @@ def test_add_1_unknown_player():
 
 
 def test_inline_search_player():
-    s = Session()
-    s.start(backend=EmptyBackend(), text=Texts())
+    s = Session(backend=EmptyBackend(), text=Texts())
 
     s.process_command(command='game', user_input='', processing_message=sample_message)
     s.process_command(command='players', user_input='several', processing_message=inline_message('players', 'several'))
 
 
 def test_add_1_known_and_1_unknown_player():
-    s = Session()
-    s.start(backend=EmptyBackend(), text=Texts())
+    s = Session(backend=EmptyBackend(), text=Texts())
 
     for i in (
         ('game', ''),
@@ -133,8 +128,7 @@ def test_add_1_known_and_1_unknown_player():
 
 
 def test_add_4_known_players_and_set_scores():
-    s = Session()
-    s.start(backend=EmptyBackend(), text=Texts())
+    s = Session(backend=EmptyBackend(), text=Texts())
 
     for i in (
         ('game', ''),
@@ -153,8 +147,7 @@ def test_add_4_known_players_and_set_scores():
 
 
 def test_add_1_unknown_player():
-    s = Session()
-    s.start(backend=EmptyBackend(), text=Texts())
+    s = Session(backend=EmptyBackend(), text=Texts())
 
     for i in (
         ('nick', ''),
@@ -165,8 +158,7 @@ def test_add_1_unknown_player():
 
 
 def test_add_1_known_player():
-    s = Session()
-    s.start(backend=EmptyBackend(), text=Texts())
+    s = Session(backend=EmptyBackend(), text=Texts())
 
     for i in (
         ('nick', ''),
@@ -176,8 +168,7 @@ def test_add_1_known_player():
 
 
 def test_search_player():
-    s = Session()
-    s.start(backend=EmptyBackend(), text=Texts())
+    s = Session(backend=EmptyBackend(), text=Texts())
 
     for i in (
         ('players', ''),

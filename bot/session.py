@@ -22,11 +22,12 @@ class SessionWorkflow(xworkflows.Workflow):
         ('s_game_created', 'All fields of Game are filled'),
         ('s_nick_adding_player', 'Adding player to database'),
         ('s_nick_new_player_phone', 'Adding phone for new player'),
-        ('s_players', 'Searching for player')
+        ('s_players', 'Searching for player'),
+        ('s_games', 'Searching for games')
     )
 
-    # Transition names are bot commands
     # A list of transition definitions
+    # Transition names are bot commands
     # (transition, source states, target state).
     transitions = (
         ('game', 'init', 's_game_adding_player'),
@@ -44,7 +45,14 @@ class SessionWorkflow(xworkflows.Workflow):
         ('nick_new_player_phone', 's_nick_new_player_phone', 'init'),
         ('players_wait', 'init', 's_players'),
         ('players_found', 's_players', 'init'),
-        ('players_not_found', 's_players', 'init')
+        ('players_not_found', 's_players', 'init'),
+        ('games_wait', 'init', 's_games'),
+        ('games_found', 's_games', 'init'),
+        ('games_not_found', 's_games', 'init'),
+        ('goto_init', ('s_game_created', 's_game_set_lost_score', 's_game_set_won_score',
+            's_game_player_confirmed', 's_game_new_player_phone', 's_game_adding_player',
+            's_nick_adding_player', 's_nick_new_player_phone', 's_players', 's_games'),
+        'init')
     )
     initial_state = 'init'
 
@@ -55,7 +63,8 @@ class SessionWorkflow(xworkflows.Workflow):
 class Session(AbstractSession, xworkflows.WorkflowEnabled):
     state = SessionWorkflow()
 
-    def start(self, backend, text):
+    def __init__(self, backend, text):
+        AbstractSession.__init__(self)
         logger.debug('start')
         self.backend = backend
         self.text = text
@@ -73,7 +82,8 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         ('s_game_set_lost_score', 'check_setting_score', ('game_set_score_lost')),
         ('s_nick_adding_player', 'check_adding_player', ('nick_already_exists', 'nick_new_player')),
         ('s_nick_new_player_phone', 'check_adding_player_phone', ('nick_new_player_phone')),
-        ('s_players', 'check_player_found', ('players_found', 'players_not_found'))
+        ('s_players', 'check_player_found', ('players_found', 'players_not_found')),
+        ('s_games', 'check_game_found', ('games_found', 'games_not_found'))
     )
 
     def _check_error_is_fatal(self, err, processing_message):
@@ -103,6 +113,18 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         self._check_error_is_fatal(err, processing_message)
         if player is not None:
             return (0, player)
+        else:
+            return (1, None)
+
+    def check_game_found(self, user_input, processing_message=None):
+        logger.debug('check_game_found')
+        if type(user_input) == Player:
+            user_input = user_input.nick
+
+        err, games = self.backend.get_games(nick=user_input)
+        self._check_error_is_fatal(err, processing_message)
+        if games is not None and len(games) > 0:
+            return (0, games)
         else:
             return (1, None)
 
@@ -156,6 +178,10 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             return (-1, None)
 
     ''' Transitions '''
+    @xworkflows.transition()
+    def goto_init(self, user_input=None, processing_message=None):
+        logger.debug('goto_init')
+
     @xworkflows.transition()
     def game(self, user_input=None, processing_message=None):
         logger.debug('game')
@@ -284,6 +310,26 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             processing_message=processing_message
         )
 
+    @xworkflows.transition()
+    def games_wait(self, processing_message=None):
+        logger.debug('games_wait')
+
+    @xworkflows.transition()
+    def games_found(self, game, processing_message=None):
+        logger.debug('games_found')
+        self.show_message(
+            message=self.text.games_found(game),
+            processing_message=processing_message
+        )
+
+    @xworkflows.transition()
+    def games_not_found(self, game, processing_message=None):
+        logger.debug('games_not_found')
+        self.show_message(
+            message=self.text.games_not_found(),
+            processing_message=processing_message
+        )
+
     @xworkflows.on_enter_state('s_game_player_confirmed')
     def _on_s_game_player_confirmed(self, transition_res=None, transition_arg=None, processing_message=None):
         logger.debug('_on_s_game_player_confirmed')
@@ -328,6 +374,19 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             processing_message=processing_message
         )
 
+    @xworkflows.on_enter_state('s_games')
+    def _on_s_players(self, transition_res=None, transition_arg=None, processing_message=None):
+        logger.debug('_on_s_games')
+        self.show_message(
+            message=self.text.games(),
+            buttons=[Button(
+                text='search',
+                switch_inline='/players ',
+                callback=None
+            )],
+            processing_message=processing_message
+        )
+
     def players(self, user_input=None, processing_message=None):
         logger.debug('players')
         if user_input is None or len(user_input) == 0 and self.state.is_init:
@@ -342,6 +401,44 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
                 contacts=players,
                 processing_message=processing_message
             )
+
+    def games(self, user_input=None, processing_message=None):
+        logger.debug('games')
+        if user_input is None or len(user_input) == 0 and self.state.is_init:
+            return self.games_wait(processing_message=processing_message)
+
+        if user_input is not None:
+            user_input = user_input.strip()
+        if user_input is not None and len(user_input) > 2:
+            err, games = self.backend.get_games(nick=user_input)
+            self._check_error_is_fatal(err, processing_message)
+            self.show_message(
+                message=json.dumps(games),
+                processing_message=processing_message
+            )
+
+    def start(self, user_input=None, processing_message=None):
+        logger.debug('start')
+        self.show_message(
+            message=self.text.start(),
+            processing_message=processing_message
+        )
+        self.goto_init()
+
+    def cancel(self, user_input=None, processing_message=None):
+        logger.debug('cancel')
+        self.show_message(
+            message=self.text.cancel(),
+            processing_message=processing_message
+        )
+        self.goto_init()
+
+    def help(self, user_input=None, processing_message=None):
+        logger.debug('help')
+        self.show_message(
+            message=self.text.help(),
+            processing_message=processing_message
+        )
 
     def _normalize_phone(self, args=None):
         p = ''

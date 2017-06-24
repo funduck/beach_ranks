@@ -67,8 +67,7 @@ def get_updates(last_id=0):
         if m.ids.user_id in sessions:
             s = sessions[m.ids.user_id]
         else:
-            s = Session()
-            s.start(search=EmptySearch(), manage=EmptyManage(), text=Texts(locale='ru'))
+            s = Session(search=EmptySearch(), manage=EmptyManage(), text=Texts(locale='ru'))
             sessions[m.ids.user_id] = s
 
         res = s.process_request(update)

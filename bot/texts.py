@@ -1,3 +1,5 @@
+import json
+
 class Texts():
     def __init__(self, locale='en'):
         self.locale = locale
@@ -31,6 +33,24 @@ class Texts():
             return 'Score is not a number'
         if self.locale == 'ru':
             return 'Должно быть число'
+
+    def start(self):
+        if self.locale == 'en':
+            return 'Hello, I do trueskill ranking\nnow you are in start menu'
+        if self.locale == 'ru':
+            return 'Привет, я рейтингую по системе trueskill\nсейчас ты в стартовом меню'
+
+    def cancel(self):
+        if self.locale == 'en':
+            return 'Canceled'
+        if self.locale == 'ru':
+            return 'Отменено'
+
+    def help(self):
+        if self.locale == 'en':
+            return 'Oh.. Dunno, it\'s nothing here'
+        if self.locale == 'ru':
+            return 'Э.. я хз, тут ничего нет :)'
 
     def game(self):
         if self.locale == 'en':
@@ -70,21 +90,21 @@ class Texts():
 
     def game_score_set_winner(self):
         if self.locale == 'en':
-            return 'Enter score of a winner'
+            return 'Score of a winner?'
         if self.locale == 'ru':
             return 'Сколько очков у победителя?'
 
     def game_score_winner_set_next_looser(self):
         if self.locale == 'en':
-            return 'Ok, now score of a looser'
+            return 'Now score of a looser'
         if self.locale == 'ru':
             return 'А у проигравших?'
 
     def game_score_set_done(self):
         if self.locale == 'en':
-            return 'Ok, done with scores'
+            return 'Done with scores'
         if self.locale == 'ru':
-            return 'Ок, очки записали'
+            return 'Очки записали'
 
     def game_saved(self):
         if self.locale == 'en':
@@ -120,7 +140,7 @@ class Texts():
         if self.locale == 'en':
             return 'Who are we looking for?'
         if self.locale == 'ru':
-            return 'Напиши, кого мы ищем'
+            return 'Кого мы ищем'
 
     def players_found(self, player):
         if self.locale == 'en':
@@ -133,3 +153,24 @@ class Texts():
             return 'Couldn\'t find anyone'
         if self.locale == 'ru':
             return 'Никого не нашлось'
+
+    def games(self):
+        if self.locale == 'en':
+            return 'Who\'s games are we looking for?'
+        if self.locale == 'ru':
+            return 'Чьи игры мы ищем'
+
+    def games_found(self, games):
+        s = ''
+        for g in games:
+            s += f'{g.date} {json.dumps(g.nicks_won)} {g.score_won}:{g.score_lost} {json.dumps(g.nicks_lost)}\n'
+        if self.locale == 'en':
+            return s
+        if self.locale == 'ru':
+            return s
+
+    def games_not_found(self):
+        if self.locale == 'en':
+            return 'Couldn\'t find any'
+        if self.locale == 'ru':
+            return 'Ничего не нашлось'

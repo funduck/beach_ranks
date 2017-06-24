@@ -1,6 +1,8 @@
 import functools
 import ssl
 import json
+import traceback
+import sys
 
 from aiohttp import web
 
@@ -81,21 +83,27 @@ class WebServer:
 
     async def _handle_wrapper(self, handler, request: web.Request):
         args = dict(zip(request.query.keys(), request.query.values()))
-        
+
         if request.has_body:
             args['body'] = await request.read()
 
         try:
             result = await handler(args)
         except AttributeError as e:
+            exc_info = sys.exc_info()
+            traceback.print_exception(*exc_info)
             return respond_error(response={
                 'error': str(e), 'message': 'bad arguments'
             })
         except RuntimeError as e:
+            exc_info = sys.exc_info()
+            traceback.print_exception(*exc_info)
             return respond_error(response={
                 'error': str(e), 'message': 'negative response'
             })
         except Exception as e:
+            exc_info = sys.exc_info()
+            traceback.print_exception(*exc_info)
             return respond_failure(response={
                 'error': str(e), 'message': 'server failure'
             })

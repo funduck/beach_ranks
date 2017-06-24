@@ -78,7 +78,7 @@ class RestRequestHandler:
         logger.debug(f'get_games {args}')
         request = valid_request_from_dict(GamesRequest, args)
 
-        games = await self._search.games(request.nick, request.with_nicks, request.vs_nicks)
+        games = await self._search.load_games_by_nicks(request.nick, request.with_nicks, request.vs_nicks)
         return [game.as_dict() for game in games]
 
     async def get_player(self, args: typing.Dict):
