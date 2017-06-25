@@ -93,19 +93,19 @@ class WebServer:
             exc_info = sys.exc_info()
             traceback.print_exception(*exc_info)
             return respond_error(response={
-                'error': str(e), 'message': 'bad arguments'
+                'error': str(e), 'error_type': 'bad arguments'
             })
         except RuntimeError as e:
             exc_info = sys.exc_info()
             traceback.print_exception(*exc_info)
             return respond_error(response={
-                'error': str(e), 'message': 'negative response'
+                'error': str(e), 'error_type': 'negative response'
             })
         except Exception as e:
             exc_info = sys.exc_info()
             traceback.print_exception(*exc_info)
             return respond_failure(response={
-                'error': str(e), 'message': 'server failure'
+                'error': str(e), 'error_type': 'server failure'
             })
 
         return respond_ok(response=result)

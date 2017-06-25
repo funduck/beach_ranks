@@ -18,7 +18,7 @@ l.setLevel(logging.DEBUG)
 
 
 defaultRating = {
-    'trueskill': 25
+    'trueskill': [25, 2]
 }
 
 
@@ -71,10 +71,6 @@ def inline_message(command, user_input):
             chat_id=3
         )
     )
-
-
-def test_init():
-    s = Session()
 
 
 def test_send_contact_1_known_player():

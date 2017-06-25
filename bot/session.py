@@ -87,7 +87,7 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     )
 
     def _check_error_is_fatal(self, err, processing_message):
-        if err is not None and err['message'] != 'negative response':
+        if err is not None and err['error_type'] != 'negative response':
             raise RuntimeError(json.dumps(err))
 
     ''' Checks '''

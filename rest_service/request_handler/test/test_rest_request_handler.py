@@ -68,7 +68,7 @@ async def test_post_game(storage):
     await handler.post_nick({'nick': 'player4'})
     await handler.post_game({'nicks_won': 'player1;player2', 'nicks_lost': 'player3;player4',
                              'score_won': '15', 'score_lost': '13'})
-    games = await search.games(nick='player1')
+    games = await search.load_games_by_nicks(nick='player1')
     assert len(games) == 1
     response = await handler.get_games({'nick': 'player1'})
     games = response
