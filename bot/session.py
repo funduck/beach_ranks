@@ -30,7 +30,7 @@ class SessionWorkflow(xworkflows.Workflow):
     # Transition names are bot commands
     # (transition, source states, target state).
     transitions = (
-        ('game', 'init', 's_game_adding_player'),
+        ('game_add', 'init', 's_game_adding_player'),
         ('game_player_confirm', 's_game_adding_player', 's_game_player_confirmed'),
         ('game_add_new_player', 's_game_adding_player', 's_game_new_player_phone'),
         ('game_new_player_phone', 's_game_new_player_phone', 's_game_player_confirmed'),
@@ -189,8 +189,8 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         )
 
     @xworkflows.transition()
-    def game(self, user_input=None, processing_message=None):
-        logger.debug('game')
+    def game_add(self, user_input=None, processing_message=None):
+        logger.debug('game_add')
         self._game = Game()
         self.show_message(
             message=self.text.game(),
@@ -330,10 +330,10 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         logger.debug('games_wait')
 
     @xworkflows.transition()
-    def games_found(self, game, processing_message=None):
+    def games_found(self, games, processing_message=None):
         logger.debug('games_found')
         self.show_message(
-            message=self.text.games_found(game),
+            message=self.text.games_found(games, len(games)),
             processing_message=processing_message
         )
 
@@ -392,6 +392,45 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
             )],
             processing_message=processing_message
         )
+
+    def game(self, user_input=None, processing_message=None):
+        logger.debug('players')
+        if user_input is None or len(user_input) == 0 and self.state.is_init:
+            return self.game_add(processing_message=processing_message)
+
+        if user_input is not None:
+            params = user_input.split(';')
+            nicks_won = params[0:2]
+            nicks_lost = params[2:4]
+            score_won = params[4]
+            score_lost = params[5]
+            self._game = Game(nicks_won=nicks_won, nicks_lost=nicks_lost,
+                score_won=score_won, score_lost=score_lost)
+
+            for nick in params[0:3]:
+                err, p = self.backend.get_player(nick=nick)
+                self._check_error_is_fatal(err, processing_message)
+                if err is not None:
+                    return self.goto_init(
+                        message=self.text.nick_not_exists() + '\n' + self.text.cancel(),
+                        processing_message=processing_message
+                    )
+                self._game.set_rating_before(nick=nick, rating=p.get_rating())
+
+            err, g = self.backend.add_game(game=self._game, who=processing_message.ids.user_id)
+            self._check_error_is_fatal(err, processing_message)
+            if err is not None:
+                return self.goto_init(
+                    message=self.text.game_save_fail(err),
+                    processing_message=processing_message
+                )
+
+            self._game = g
+            self.show_message(
+                message=self.text.game_saved(),
+                processing_message=processing_message
+            )
+
 
     def players(self, user_input=None, processing_message=None):
         logger.debug('players')

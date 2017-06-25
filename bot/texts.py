@@ -124,6 +124,12 @@ class Texts():
         if self.locale == 'ru':
             return 'Игрок с таким именем уже есть'
 
+    def nick_not_exists(self):
+        if self.locale == 'en':
+            return 'Player with this nick not exists'
+        if self.locale == 'ru':
+            return 'Игрока с таким именем нет'
+
     def nick_adding_enter_phone(self):
         if self.locale == 'en':
             return 'What\'s his phone number?'
@@ -160,14 +166,14 @@ class Texts():
         if self.locale == 'ru':
             return 'Чьи игры мы ищем'
 
-    def games_found(self, games):
+    def games_found(self, games, count):
         s = ''
         for g in games:
             s += f'{g.date} {json.dumps(g.nicks_won)} {g.score_won}:{g.score_lost} {json.dumps(g.nicks_lost)}\n'
         if self.locale == 'en':
-            return s
+            return f'last {count}\n' + s
         if self.locale == 'ru':
-            return s
+            return f'последние {count}\n' + s
 
     def games_not_found(self):
         if self.locale == 'en':

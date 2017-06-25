@@ -119,11 +119,14 @@ class Search:
         ]
 
     @staticmethod
-    def sql_load_games_by_nicks(nick, nicks_won, nicks_lost):
+    def sql_load_games_by_nicks(nick, nicks_won, nicks_lost, count, max_game_id):
         return [
-            'select distinct game_id from beach_ranks.game_players g, beach_ranks.players p '
-            'where g.player_id = p.player_id and UPPER(nick) = UPPER(%s)',
-            [nick]
+            'select distinct game_id '
+            'from beach_ranks.game_players g, beach_ranks.players p '
+            'where g.player_id = p.player_id and UPPER(nick) = UPPER(%s) '
+            'and (game_id < %s or 0 >= %s) '
+            'limit %s',
+            [nick, max_game_id, max_game_id, count]
         ]
         # TODO nicks_won nicks_lost
 
@@ -212,15 +215,15 @@ class Search:
         return g
 
     @staticmethod
-    async def load_games_by_nicks(nick, nicks_won, nicks_lost):
-        res = await db.execute(Search.sql_load_games_by_nicks(nick, nicks_won, nicks_lost))
+    async def load_games_by_nicks(nick, nicks_won, nicks_lost, count=10, max_game_id=0):
+        res = await db.execute(Search.sql_load_games_by_nicks(nick, nicks_won, nicks_lost, count, max_game_id))
         if len(res) == 0:
-            raise RuntimeError(f'Could not find games by nicks {nick} {nicks_won} {nicks_lost}')
+            raise RuntimeError(f'Could not find games by nicks {nick} {nicks_won} {nicks_lost} {count} {max_game_id}')
 
         games = []
         for record in res:
             g = await Search.load_game_by_id(record[0])
             games.append(g)
 
-        logger.debug(f'load_games_by_nicks {nick} {nicks_won} {nicks_lost}')
+        logger.debug(f'load_games_by_nicks {nick} {nicks_won} {nicks_lost} {count} {max_game_id}')
         return games

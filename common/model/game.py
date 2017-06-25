@@ -1,8 +1,10 @@
 import datetime
 from .player import Rating
+from common.logger import init_logger
 
 
 ratingSystem = 'trueskill'
+logger = init_logger('ModelGame')
 
 
 class Game:
@@ -19,6 +21,7 @@ class Game:
 
     def set_rating_before(self, nick: str, rating: Rating):
         if nick not in self.nicks_won and nick not in self.nicks_lost:
+            logger.error(f'{nick} not in {self.nicks_won} and {self.nicks_lost}')
             raise RuntimeError(f'Invalid nickname given: {nick}')
 
         self._init_rating(nick)
@@ -32,6 +35,7 @@ class Game:
 
     def set_rating_after(self, nick: str, rating: Rating):
         if nick not in self.nicks_won and nick not in self.nicks_lost:
+            logger.error(f'{nick} not in {self.nicks_won} and {self.nicks_lost}')
             raise RuntimeError(f'Invalid nickname given: {nick}')
 
         self._init_rating(nick)

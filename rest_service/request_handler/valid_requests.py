@@ -5,7 +5,7 @@ from collections import namedtuple
 AddNickRequest = namedtuple('AddNickRequest', ['nick', 'phone'])
 ForgetNickRequest = namedtuple('ForgetNickRequest', ['nick'])
 AddGameRequest = namedtuple('AddGameRequest', ['nicks_won', 'nicks_lost', 'score_won', 'score_lost'])
-GamesRequest = namedtuple('GetGamesRequest', ['nick', 'with_nicks', 'vs_nicks'])
+GamesRequest = namedtuple('GetGamesRequest', ['nick', 'with_nicks', 'vs_nicks', 'count', 'max_game_id'])
 PlayerRequest = namedtuple('GetPlayerRequest', ['nick'])
 PlayersRequest = namedtuple('GetPlayersRequest', ['nick_like'])
 
@@ -50,7 +50,10 @@ def valid_request_from_dict(request_type, args: typing.Dict):
 
         with_nicks = args['with_nicks'].split(LISTS_DELIMITER) if 'with_nicks' in args else None
         vs_nicks = args['vs_nicks'].split(LISTS_DELIMITER) if 'vs_nicks' in args else None
-        return GamesRequest(nick=args['nick'], with_nicks=with_nicks, vs_nicks=vs_nicks)
+        count = args['count'] if 'count' in args else 10
+        max_game_id = args['max_game_id'] if 'max_game_id' in args else 0
+        return GamesRequest(nick=args['nick'], with_nicks=with_nicks, vs_nicks=vs_nicks,
+            count=count, max_game_id=max_game_id)
 
     if request_type is PlayerRequest:
         if 'nick' not in args:
