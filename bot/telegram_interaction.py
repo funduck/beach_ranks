@@ -102,7 +102,7 @@ class TelegramInteraction():
             ids=ids
         )
 
-    def show_message(self, as_reply, message=None, buttons=None):
+    def show_message(self, as_reply, message=None, buttons=None, keyboard=False):
         if as_reply.chat_id is None:
             logger.error(f'Can show message only when know chat_id \'{as_reply}\'')
             return
@@ -124,6 +124,10 @@ class TelegramInteraction():
             all_btns = [[]]
             btns = all_btns[0]
             for b in buttons:
+                if isinstance(b, str):
+                    btns.append(b)
+                    continue
+
                 if b.switch_inline is not None:
                     btns.append({
                         'text': b.text,
@@ -135,11 +139,19 @@ class TelegramInteraction():
                         'callback_data': b.callback
                     })
 
-            r['body'].update({
-                'reply_markup': json.dumps({
-                    'inline_keyboard': all_btns
+            if keyboard:
+                r['body'].update({
+                    'reply_markup': json.dumps({
+                        'keyboard': all_btns,
+                        'resize_keyboard': True
+                    })
                 })
-            })
+            else:
+                r['body'].update({
+                    'reply_markup': json.dumps({
+                        'inline_keyboard': all_btns
+                    })
+                })
 
         return TelegramOutMessage(
             method=r['method'],

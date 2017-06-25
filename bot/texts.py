@@ -36,15 +36,15 @@ class Texts():
 
     def start(self):
         if self.locale == 'en':
-            return 'Hello, I do trueskill ranking\nnow you are in start menu'
+            return 'Hello, I do trueskill ranking for games 2x2\nnow you are in start menu'
         if self.locale == 'ru':
-            return 'Привет, я рейтингую по системе trueskill\nсейчас ты в стартовом меню'
+            return 'Привет, я рейтингую игры 2х2 по системе trueskill\nсейчас ты в стартовом меню'
 
     def cancel(self):
         if self.locale == 'en':
-            return 'Canceled'
+            return 'Canceled\nnow you are in start menu'
         if self.locale == 'ru':
-            return 'Отменено'
+            return 'Отменено\nсейчас ты в стартовом меню'
 
     def help(self):
         if self.locale == 'en':

@@ -49,7 +49,7 @@ class SessionWorkflow(xworkflows.Workflow):
         ('games_wait', 'init', 's_games'),
         ('games_found', 's_games', 'init'),
         ('games_not_found', 's_games', 'init'),
-        ('goto_init', ('s_game_created', 's_game_set_lost_score', 's_game_set_won_score',
+        ('goto_init', ('init', 's_game_created', 's_game_set_lost_score', 's_game_set_won_score',
             's_game_player_confirmed', 's_game_new_player_phone', 's_game_adding_player',
             's_nick_adding_player', 's_nick_new_player_phone', 's_players', 's_games'),
         'init')
@@ -179,8 +179,14 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     ''' Transitions '''
     @xworkflows.transition()
-    def goto_init(self, user_input=None, processing_message=None):
+    def goto_init(self, user_input=None, processing_message=None, message=None):
         logger.debug('goto_init')
+        self.show_message(
+            message=message,
+            buttons=['/game', '/players', '/games', '/cancel'],
+            keyboard=True,
+            processing_message=processing_message
+        )
 
     @xworkflows.transition()
     def game(self, user_input=None, processing_message=None):
@@ -293,6 +299,15 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     @xworkflows.transition()
     def players_wait(self, processing_message=None):
         logger.debug('players_wait')
+        self.show_message(
+            message=self.text.players(),
+            buttons=[Button(
+                text='search',
+                switch_inline='/players ',
+                callback=None
+            )],
+            processing_message=processing_message
+        )
 
     @xworkflows.transition()
     def players_found(self, player, processing_message=None):
@@ -364,15 +379,6 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
     @xworkflows.on_enter_state('s_players')
     def _on_s_players(self, transition_res=None, transition_arg=None, processing_message=None):
         logger.debug('_on_s_players')
-        self.show_message(
-            message=self.text.players(),
-            buttons=[Button(
-                text='search',
-                switch_inline='/players ',
-                callback=None
-            )],
-            processing_message=processing_message
-        )
 
     @xworkflows.on_enter_state('s_games')
     def _on_s_players(self, transition_res=None, transition_arg=None, processing_message=None):
@@ -419,19 +425,11 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
 
     def start(self, user_input=None, processing_message=None):
         logger.debug('start')
-        self.show_message(
-            message=self.text.start(),
-            processing_message=processing_message
-        )
-        self.goto_init()
+        self.goto_init(message=self.text.start(), processing_message=processing_message)
 
     def cancel(self, user_input=None, processing_message=None):
         logger.debug('cancel')
-        self.show_message(
-            message=self.text.cancel(),
-            processing_message=processing_message
-        )
-        self.goto_init()
+        self.goto_init(message=self.text.cancel(), processing_message=processing_message)
 
     def help(self, user_input=None, processing_message=None):
         logger.debug('help')
