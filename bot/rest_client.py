@@ -22,7 +22,7 @@ def do_request(url, params, method):
         return status_code, json.loads(text)
     except Exception as e:
         logger.error(f'do_request {params} {method} error: {e}')
-        return 400, {'error': str(e), 'error_type': 'client'}
+        return 400, {'error': f'{e}', 'error_type': 'client'}
 
 
 class RestClient():

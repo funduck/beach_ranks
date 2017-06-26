@@ -166,8 +166,8 @@ class TelegramInteraction():
         for i in range(0, len(contacts)):
             c.append({
                 'type': 'contact',
-                'id': str(i),
-                'phone_number': str(contacts[i].phone),
+                'id': f'{i}',
+                'phone_number': f'{contacts[i].phone}',
                 'first_name': contacts[i].nick
             })
         r = {

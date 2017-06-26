@@ -138,9 +138,9 @@ class Texts():
 
     def nick_added(self, player):
         if self.locale == 'en':
-            return f'Player \'{player.nick}\' added'
+            return f'Player \'{player.nick.encode("utf-8")}\' added'
         if self.locale == 'ru':
-            return f'Игрок \'{player.nick}\' добавлен'
+            return f'Игрок \'{player.nick.encode("utf-8")}\' добавлен'
 
     def players(self):
         if self.locale == 'en':
@@ -150,9 +150,9 @@ class Texts():
 
     def players_found(self, player):
         if self.locale == 'en':
-            return f'\'{player.nick}\' rating: {round(player.get_rating()[0], 2)} accuracy: {round(player.get_rating()[1], 2)}'
+            return f'\'{player.nick.encode("utf-8")}\' rating: {round(player.get_rating()[0], 2)} accuracy: {round(player.get_rating()[1], 2)}'
         if self.locale == 'ru':
-            return f'\'{player.nick}\' рейтинг: {round(player.get_rating()[0], 2)} точность: {round(player.get_rating()[1], 2)}'
+            return f'\'{player.nick.encode("utf-8")}\' рейтинг: {round(player.get_rating()[0], 2)} точность: {round(player.get_rating()[1], 2)}'
 
     def players_not_found(self):
         if self.locale == 'en':

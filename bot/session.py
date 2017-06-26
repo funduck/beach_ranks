@@ -132,10 +132,10 @@ class Session(AbstractSession, xworkflows.WorkflowEnabled):
         logger.debug('check_adding_player_phone')
         try:
             phone = int(self._normalize_phone(user_input))
-            return (0, str(phone))
+            return (0, f'{phone}')
         except ValueError:
             self.show_message(
-                message=self.text.phone_incorrect(),
+                message=self.text.check_phone_incorrect(),
                 processing_message=processing_message,
                 reply=True
             )
