@@ -32,7 +32,7 @@ def get_updates(last_id=0):
     updates = updates['result']
     new_last_id = last_id
     for update in updates:
-        print('\nresponding to:\n', update)
+        logging.getLogger('Bot').debug(f'responding to {update}')
 
         if update['update_id'] > new_last_id:
             new_last_id = update['update_id']
