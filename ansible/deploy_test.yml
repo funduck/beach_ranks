@@ -1,0 +1,37 @@
+---
+- hosts: webservers
+  remote_user: admin
+  tasks:
+
+  - name: Stop beachranks REST service
+    command: daemon --name beachranks_test --stop
+    ignore_errors: yes
+
+  - name: Stop beachranks bot
+    command: daemon --name beachranks_test_bot --stop
+    ignore_errors: yes
+
+  - name: Remove old beachranks sources
+    file:
+      state: absent
+      path: "/home/admin/beachranks_test"
+
+  - name: Switch to test branch
+    command: git checkout test
+
+  - name: Checkout beachranks sources
+    git:
+      repo: https://github.com/funduck/beach_ranks.git
+      dest: /home/admin/beachranks_test
+
+  - name: Update beachranks conda environment
+    command: /home/admin/anaconda3/bin/conda env update -f /home/admin/beachranks/ansible/beachranks_env.yml
+
+  - name: Run beachranks tests
+    command: bash /home/admin/beachranks_test/run_tests.sh
+
+  - name: Start beachranks REST service
+    command: bash /home/admin/beachranks_test/rest_service/run_test.sh
+
+  - name: Start beachranks bot
+    command: bash /home/admin/beachranks_test/bot/run_test.sh
