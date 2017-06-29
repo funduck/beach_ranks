@@ -5,6 +5,7 @@ import aiopg
 import psycopg2
 
 from common.logger import init_logger
+from config.config import Config, initConfig
 
 
 logger = init_logger('DB')
@@ -12,7 +13,13 @@ logger = init_logger('DB')
 
 class DB:
     def __init__(self):
-        self.dsn = 'dbname=beach_ranks user=beach_ranks password=beachranks host=127.0.0.1 port=5432'
+        self.dsn = f'''
+            dbname={Config.rest_service.db_name}
+            user={Config.rest_service.db_user}
+            password={Config.rest_service.db_pw}
+            host={Config.rest_service.db_host}
+            port={Config.rest_service.db_port}'''
+        logger.info(self.dsn)
         self.do_fetch_regexp = re.compile("^(SELECT|select)")
         self.conn_pool = None
         self.event_loop_id = None
@@ -44,4 +51,6 @@ class DB:
                     raise RuntimeError('error on executing statement')
 
 
+if Config.rest_service is None:
+    initConfig('unittest')
 db = DB()

@@ -1,0 +1,34 @@
+--run under postgres
+
+DROP DATABASE IF EXISTS beach_ranks_test;
+
+DROP ROLE IF EXISTS admin;
+DROP ROLE IF EXISTS beach_ranks;
+DROP ROLE IF EXISTS beach_ranks_group;
+
+CREATE ROLE beach_ranks_group
+  NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+
+CREATE ROLE admin LOGIN
+  ENCRYPTED PASSWORD 'md5d33e435c716fd8c46ce9a04067c01a80'
+  NOSUPERUSER INHERIT NOCREATEDB;
+
+CREATE ROLE beach_ranks LOGIN
+  ENCRYPTED PASSWORD 'md5d33e435c716fd8c46ce9a04067c01a80'
+  NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+
+GRANT beach_ranks_group TO beach_ranks;
+
+CREATE DATABASE beach_ranks_test
+  WITH OWNER = admin
+       ENCODING = 'UTF8'
+       TABLESPACE = pg_default
+       LC_COLLATE = 'C'
+       LC_CTYPE = 'C'
+       CONNECTION LIMIT = -1
+       TEMPLATE template0;
+
+\c beach_ranks_test;
+
+CREATE SCHEMA beach_ranks
+  AUTHORIZATION admin;

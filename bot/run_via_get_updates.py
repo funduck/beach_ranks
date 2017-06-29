@@ -1,7 +1,10 @@
+from optparse import OptionParser
 import json
 import logging
 import time
 import urllib.request
+
+from config.config import Config, initConfig
 
 from bot.rest_client import RestClient
 from bot.session import Session
@@ -19,7 +22,7 @@ def send_request(message):
         return
     p = urllib.parse.urlencode(message.body)
     # print('\n', message.method, '\n', message.body)
-    url = 'https://api.telegram.org/bot299909888:AAEjhCS1I55FFrRrLyMiUFpZDH8nu5JZ0Q8/%s?%s' % (message.method, p)
+    url = f'https://api.telegram.org/{Config.bot.token}/%s?%s' % (message.method, p)
     return json.loads(urllib.request.urlopen(url).read())
 
 
@@ -44,7 +47,10 @@ def get_updates(last_id=0):
         if m.ids.user_id in sessions:
             s = sessions[m.ids.user_id]
         else:
-            s = Session(backend=RestClient('185.4.74.144', 9999), text=Texts(locale='ru')) # '185.4.74.144'
+            s = Session(
+                backend=RestClient(Config.bot.host, Config.rest_service.port),
+                text=Texts(locale=Config.bot.locale)
+            ) # '185.4.74.144'
             sessions[m.ids.user_id] = s
 
         res = s.process_request(update)
@@ -61,4 +67,9 @@ def run():
         time.sleep(2)
 
 
+parser = OptionParser()
+parser.add_option('-M', '--mode', dest='mode', help='mode for bot (can be test, by default is None, for unittest use unittest)')
+(options, args) = parser.parse_args()
+
+initConfig(options.mode)
 run()
