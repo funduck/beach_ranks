@@ -22,12 +22,30 @@ To deploy beachranks application you need to run this command from beach_ranks/a
 ```{r, engine='bash', count_lines}
 $ ansible-playbook -i hosts deploy.yml
 ```
+
 This will make those steps
 * stop beachranks application
+* stop beachranks bot
 * update sources from git
 * update conda environment
 * run tests
 * start beachranks application
+* start beachranks bot
+
+## Deploying TEST application
+test database, directories, bot
+```{r, engine='bash', count_lines}
+$ ansible-playbook -i hosts deploy_test.yml
+```
+
+This will make those steps
+* stop beachranks_test application
+* stop beachranks_test bot
+* update sources from git - branch test
+* update conda environment
+* run tests
+* start beachranks_test application
+* start beachranks_test bot
 
 ## Change conda environment
 To change beachranks conda environment you should edit **beachranks_env.yml** file, and run deploy script.
