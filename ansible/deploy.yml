@@ -3,8 +3,12 @@
   remote_user: admin
   tasks:
 
-  - name: Stop beachranks application
+  - name: Stop beachranks REST service
     command: daemon --name beachranks --stop
+    ignore_errors: yes
+
+  - name: Stop beachranks bot
+    command: daemon --name beachranks_bot --stop
     ignore_errors: yes
 
   - name: Remove old beachranks sources
@@ -23,5 +27,8 @@
   - name: Run beachranks tests
     command: bash /home/admin/beachranks/run_tests.sh
 
-  - name: Start beachranks RESR server
+  - name: Start beachranks REST service
     command: bash /home/admin/beachranks/rest_service/run.sh
+
+  - name: Start beachranks bot
+    command: bash /home/admin/beachranks/bot/run.sh
