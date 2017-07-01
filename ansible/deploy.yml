@@ -24,6 +24,9 @@
   - name: Update beachranks conda environment
     command: /home/admin/anaconda3/bin/conda env update -f /home/admin/beachranks/ansible/beachranks_env.yml
 
+  - name: Create logs directory if not exists
+    file: path=/home/admin/logs state=directory
+
   - name: Run beachranks tests
     command: bash /home/admin/beachranks/run_tests.sh
 
