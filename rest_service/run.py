@@ -21,7 +21,7 @@ logging.getLogger('DBSearch').setLevel(logging.DEBUG)
 logging.getLogger('DBManage').setLevel(logging.DEBUG)
 logging.getLogger('WebServer').setLevel(logging.DEBUG)
 
-host = options.host if options.host is not None else 'localhost'
+host = options.host
 port = int(options.port) if options.port is not None else Config.rest_service.port
 
 server = WebServer(RestRequestHandler(), host=host, port=port)
