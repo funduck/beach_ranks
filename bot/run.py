@@ -53,7 +53,7 @@ class BotRestRequestHandler:
             s = self.sessions[m.ids.user_id]
         else:
             s = Session()
-            s.start(backend=RestClient(restHost, restPort), text=Texts(locale='ru')) # '185.4.74.144'
+            s.start(backend=RestClient(self.restHost, self.restPort), text=Texts(locale='ru')) # '185.4.74.144'
             self.sessions[m.ids.user_id] = s
 
         res = s.process_request(update)
