@@ -30,18 +30,16 @@ async def test_get_player(storage):
     handler = RestRequestHandler(search, manage)
     await handler.post_nick({'nick': 'test'})
     output = await handler.get_player({'nick': 'test'})
-    assert isinstance(output, dict)
-    with pytest.raises(RuntimeError):
-        await handler.get_player({'nick': 'test_not_exists'})
-
-
-@pytest.mark.asyncio
-async def test_get_players(storage):
-    search, manage = storage
-    handler = RestRequestHandler(search, manage)
-    await handler.post_nick({'nick': 'test'})
-    output = await handler.get_players({'nick_like': 'test'})
+    assert isinstance(output, list)
+    assert len(output) == 1
     assert isinstance(output[0], dict)
+    output = await handler.get_player({'nick': 'tes'})
+    assert isinstance(output, list)
+    assert len(output) == 1
+    assert isinstance(output[0], dict)
+    output = await handler.get_player({'nick': 'test_not_exists'})
+    assert isinstance(output, list)
+    assert len(output) == 0
 
 
 @pytest.mark.asyncio

@@ -86,18 +86,10 @@ class RestRequestHandler:
         logger.debug(f'get_player {args}')
         request = valid_request_from_dict(PlayerRequest, args)
 
-        player = await self._search.load_player_by_nick(request.nick)
-        if player is None:
-            raise RuntimeError(f'Player not found: {request.nick}')
+        players = await self._search.load_players_nick_like(request.nick)
 
-        return player.as_dict()
-
-    async def get_players(self, args: typing.Dict):
-        logger.debug(f'get_players {args}')
-        request = valid_request_from_dict(PlayersRequest, args)
-
-        players = await self._search.load_players_nick_like(request.nick_like)
-        return [player.as_dict() for player in players]
+        return [p.as_dict() for p in players]
 
     async def get_help(self, args: typing.Dict):
         return f'/help?{args}'
+
