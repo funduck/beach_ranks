@@ -8,6 +8,7 @@ AddGameRequest = namedtuple('AddGameRequest', ['nicks_won', 'nicks_lost', 'score
 GamesRequest = namedtuple('GetGamesRequest', ['nick', 'with_nicks', 'vs_nicks', 'count', 'max_game_id'])
 PlayerRequest = namedtuple('GetPlayerRequest', ['nick'])
 PlayersRequest = namedtuple('GetPlayersRequest', ['nick_like'])
+TopRequest = namedtuple('TopRequest', ['offset', 'count'])
 
 LISTS_DELIMITER = ';'
 
@@ -66,5 +67,8 @@ def valid_request_from_dict(request_type, args: typing.Dict):
             raise AttributeError(f'Invalid arguments for {request_type.__name__}: no nick_like')
 
         return PlayersRequest(nick_like=args['nick_like'])
+
+    if request_type is TopRequest:
+        return TopRequest(offset=args.get('offset', 0), count=args.get('count', 20)) 
 
     raise AttributeError(f'Unknown request type: {request_type.__name__}')

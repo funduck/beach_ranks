@@ -131,6 +131,17 @@ class Search:
         # TODO nicks_won nicks_lost
 
     @staticmethod
+    def sql_load_top_players(offset, count):
+        return [
+                'select p.player_id, nick, phone, value, accuracy '
+                '        from beach_ranks.players p join beach_ranks.ratings r on '
+                '            p.player_id = r.player_id '
+                '        order by value desc '
+                '        offset %s limit %s ',
+                [offset, count],
+        ]
+
+    @staticmethod
     async def load_player_by_nick(nick):
         res = await db.execute(Search.sql_load_player_by_nick(nick))
         if len(res) == 0:
@@ -227,3 +238,17 @@ class Search:
 
         logger.debug(f'load_games_by_nicks {nick} {nicks_won} {nicks_lost} {count} {max_game_id}')
         return games
+
+    @staticmethod
+    async def load_top_players(offset, count):
+        res = await db.execute(Search.sql_load_top_players(offset, count))
+        players = []
+        for record in res:
+            player_id, nick, phone, value, accuracy = record
+            p = Player(player_id, nick, phone)
+            p.set_rating(Rating(value, accuracy))
+            players.append(p)
+
+        return players
+
+
