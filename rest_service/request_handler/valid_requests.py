@@ -69,6 +69,6 @@ def valid_request_from_dict(request_type, args: typing.Dict):
         return PlayersRequest(nick_like=args['nick_like'])
 
     if request_type is TopRequest:
-        return TopRequest(offset=args.get('offset', 0), count=args.get('count', 20)) 
+        return TopRequest(offset=args.get('offset', '0'), count=args.get('count', '20')) 
 
     raise AttributeError(f'Unknown request type: {request_type.__name__}')
