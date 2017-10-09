@@ -7,7 +7,7 @@ beachranks_server = "http://localhost:9999"
 
 def send_http_get(resourse, params=None):
     r = requests.get(f'{beachranks_server}{resourse}', params=params)
-    if (r.status_code == 200)
+    if r.status_code == 200:
         return json.loads(r.text)
     else:
         raise RuntimeError(r.text)
@@ -15,7 +15,7 @@ def send_http_get(resourse, params=None):
 
 def send_http_post(resourse, params=None):
     r = requests.post(f'{beachranks_server}{resourse}', params=params)
-    if (r.status_code == 200)
+    if r.status_code == 200:
         return 'added'
     else:
         raise RuntimeError(r.text)
