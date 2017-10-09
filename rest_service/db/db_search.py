@@ -245,11 +245,9 @@ class Search:
         players = []
         for record in res:
             player_id, nick, phone, value, accuracy = record
-            p = Player(player_id, nick, phone)
+            p = Player(player_id=player_id, nick=nick, phone=phone)
             p.set_rating(Rating(value, accuracy))
             players.append(p)
-
-        logger.debug(f'top loaded: {players}')
 
         return players
 
