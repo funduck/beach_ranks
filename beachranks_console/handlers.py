@@ -129,12 +129,16 @@ def games(bot, update, args):
 
 
 def top(bot, update, args):
+    offset = 0
     number = 20
-    if len(args) > 0 and args[0].isdigit():
+    if len(args) == 1:
         number = int(args[0])
+    if len(args) == 2:
+        offset = int(args[0])
+        number = int(args[1])
 
     try:
-        msg = send_http_get('/top', {'count': number})
+        msg = send_http_get('/top', {'offset': offset, 'count': number})
         bot.send_message(chat_id=update.message.chat_id, text=players_response(msg))
     except RuntimeError as e:
         bot.send_message(chat_id=update.message.chat_id, text=f'failure: {e.message}')
