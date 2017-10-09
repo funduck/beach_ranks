@@ -60,7 +60,8 @@ def games_response(response, player):
         value_after = game['ratings'][player]['after']['trueskill'][0]
         acc_after = game['ratings'][player]['after']['trueskill'][1]
 
-        output += f'{index}. {status}. with: {partner}. vs: {enemy[0]}, {enemy[1]}, rating {value_before:.2f}, {acc_before:.2f} -> {value_after:.2f}, {acc_after:.2f}\n'
+        output += f'{index}. {status}. with: {partner}. vs: {enemy[0]}, {enemy[1]}. rating: {value_before:.2f}, {acc_before:.2f} -> {value_after:.2f}, {acc_after:.2f}\n'
+        index += 1
 
     return output
 
