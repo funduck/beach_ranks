@@ -102,7 +102,6 @@ class WebServer:
                 'error': f'{e}', 'error_type': 'negative response'
             })
         except Exception as e:
-            logging.exception(f'Error occured: {e}')
             exc_info = sys.exc_info()
             traceback.print_exception(*exc_info)
             return respond_failure(response={
