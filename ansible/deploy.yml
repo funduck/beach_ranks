@@ -11,6 +11,10 @@
     command: daemon --name beachranks_bot --stop
     ignore_errors: yes
 
+  - name: Stop beachranks-console bot
+    command: daemon --name beachranks_console --stop
+    ignore_errors: yes
+
   - name: Remove old beachranks sources
     file:
       state: absent
@@ -35,3 +39,7 @@
 
   - name: Start beachranks bot
     command: bash /home/admin/beachranks/bot/run.sh
+
+  - name: Start beachranks-console bot
+    command: bash /home/admin/beachranks/beachranks_console/run.sh
+
