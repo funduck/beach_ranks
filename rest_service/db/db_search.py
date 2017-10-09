@@ -138,7 +138,7 @@ class Search:
                 '            p.player_id = r.player_id '
                 '        order by value desc '
                 '        offset %s limit %s ',
-                [offset, count],
+                [offset, count]
         ]
 
     @staticmethod
@@ -248,6 +248,8 @@ class Search:
             p = Player(player_id, nick, phone)
             p.set_rating(Rating(value, accuracy))
             players.append(p)
+
+        logger.debug(f'top loaded: {players}')
 
         return players
 
